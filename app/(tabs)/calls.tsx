@@ -9,8 +9,11 @@ import { CallRecord, CallUserRef } from '../../lib/api/call/callApi';
 
 const PAGE_SIZE = 20;
 
-function getUserRef(value: CallRecord['caller'] | CallRecord['participants'][number]['userId']): CallUserRef | null {
-    if (!value || typeof value === 'string') return null;
+function asUserRef(value: CallRecord['caller'] | CallRecord['participants'][number]['userId'] | null | undefined): CallUserRef | null {
+    if (!value || typeof value === 'string') {
+        return null;
+    }
+
     return value;
 }
 
@@ -60,9 +63,9 @@ function formatDuration(startTime?: string, endTime?: string) {
 }
 
 function getCallMeta(call: CallRecord, currentUserId: string) {
-    const caller = getUserRef(call.caller);
+    const caller = asUserRef(call.caller);
     const currentParticipant = call.participants.find((participant) => {
-        const user = getUserRef(participant.userId);
+        const user = asUserRef(participant.userId);
         return user?._id === currentUserId;
     });
 
@@ -70,23 +73,26 @@ function getCallMeta(call: CallRecord, currentUserId: string) {
     const isParticipant = Boolean(currentParticipant);
 
     const otherUser = isCaller
-        ? getUserRef(call.participants.find((participant) => {
-            const user = getUserRef(participant.userId);
+        ? asUserRef(call.participants.find((participant) => {
+            const user = asUserRef(participant.userId);
             return user?._id && user._id !== currentUserId;
-        })?.userId || null)
+        })?.userId)
         : caller;
 
-    const direction = isCaller ? 'Outgoing' : isParticipant ? 'Incoming' : 'Call';
-
-    let status: string = 'Ended';
+    let status = 'Ended';
     if (isCaller) {
         const accepted = call.participants.some((participant) => participant.status === 'accepted');
         const rejected = call.participants.some((participant) => participant.status === 'rejected');
 
-        if (!call.endTime) status = 'Ongoing';
-        else if (accepted) status = 'Completed';
-        else if (rejected) status = 'Missed';
-        else status = 'Missed';
+        if (!call.endTime) {
+            status = 'Ongoing';
+        } else if (accepted) {
+            status = 'Completed';
+        } else if (rejected) {
+            status = 'Missed';
+        } else {
+            status = 'Missed';
+        }
     } else if (isParticipant) {
         if (currentParticipant?.status === 'accepted') {
             status = call.endTime ? 'Completed' : 'Connected';
@@ -98,13 +104,14 @@ function getCallMeta(call: CallRecord, currentUserId: string) {
     }
 
     const chatName = typeof call.chatId === 'object' && call.chatId?.name ? call.chatId.name : '';
+    const direction = isCaller ? 'Outgoing' : isParticipant ? 'Incoming' : 'Call';
 
     return {
         caller,
         otherUser,
+        chatName,
         direction,
         status,
-        chatName,
     };
 }
 
@@ -119,7 +126,7 @@ function CallItem({
     const displayName = meta.chatName || meta.otherUser?.username || meta.caller?.username || 'Unknown';
     const profilePic = meta.otherUser?.profilePic || meta.caller?.profilePic || null;
     const dateLabel = formatDateLabel(call.createdAt);
-    const callTime = formatTime(call.createdAt);
+    const timeLabel = formatTime(call.createdAt);
     const duration = formatDuration(call.startTime, call.endTime);
     const isVideo = call.type === 'video';
 
@@ -141,18 +148,14 @@ function CallItem({
 
     return (
         <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             className="px-6 py-4 border-b border-slate-800 flex-row items-center"
         >
             <View className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden items-center justify-center">
                 {profilePic ? (
                     <Image source={{ uri: profilePic }} className="w-full h-full" resizeMode="cover" />
                 ) : (
-                    <Ionicons
-                        name={isVideo ? 'videocam' : 'call'}
-                        size={22}
-                        color="#6C5CE7"
-                    />
+                    <Ionicons name={isVideo ? 'videocam' : 'call'} size={22} color="#6C5CE7" />
                 )}
             </View>
 
@@ -162,7 +165,7 @@ function CallItem({
                         {displayName}
                     </Text>
                     <Text className="text-slate-500 text-xs">
-                        {dateLabel ? `${dateLabel} • ${callTime}` : callTime}
+                        {dateLabel ? `${dateLabel} - ${timeLabel}` : timeLabel}
                     </Text>
                 </View>
 
@@ -170,7 +173,7 @@ function CallItem({
                     <Ionicons name={directionIcon as any} size={14} color={statusColor} />
                     <Text className="text-slate-400 text-sm ml-1" numberOfLines={1}>
                         {meta.direction} {isVideo ? 'video' : 'voice'} call
-                        {duration ? ` • ${duration}` : ''}
+                        {duration ? ` - ${duration}` : ''}
                     </Text>
                 </View>
             </View>
@@ -193,6 +196,7 @@ export default function CallsScreen() {
     const { data, isLoading, error, isFetching, refetch } = useCallHistory(page, PAGE_SIZE);
 
     const totalPages = data?.pagination.pages ?? data?.pagination.totalPages ?? 1;
+    const hasMore = page < totalPages;
 
     useEffect(() => {
         if (!data?.data) return;
@@ -211,8 +215,6 @@ export default function CallsScreen() {
         });
     }, [data, page]);
 
-    const hasMore = page < totalPages;
-
     const handleRefresh = async () => {
         if (page !== 1) {
             setCalls([]);
@@ -228,19 +230,22 @@ export default function CallsScreen() {
         setPage((prev) => prev + 1);
     };
 
-    const emptyState = useMemo(() => (
-        <View className="flex-1 items-center justify-center px-6 py-20">
-            <View className="w-24 h-24 rounded-full bg-slate-800 items-center justify-center mb-6">
-                <Ionicons name="call-outline" size={48} color="#6C5CE7" />
+    const emptyState = useMemo(
+        () => (
+            <View className="flex-1 items-center justify-center px-6 py-20">
+                <View className="w-24 h-24 rounded-full bg-slate-800 items-center justify-center mb-6">
+                    <Ionicons name="call-outline" size={48} color="#6C5CE7" />
+                </View>
+                <Text className="text-white text-xl font-semibold mb-2">
+                    No calls yet
+                </Text>
+                <Text className="text-slate-400 text-center text-sm">
+                    Your attempted and answered calls will appear here.
+                </Text>
             </View>
-            <Text className="text-white text-xl font-semibold mb-2">
-                No calls yet
-            </Text>
-            <Text className="text-slate-400 text-center text-sm">
-                Your attempted and answered calls will appear here.
-            </Text>
-        </View>
-    ), []);
+        ),
+        []
+    );
 
     return (
         <SafeAreaView className="flex-1 bg-[#0F172A]" style={{ backgroundColor: '#0F172A' }}>
@@ -271,16 +276,16 @@ export default function CallsScreen() {
                 <FlatList
                     data={calls}
                     keyExtractor={(item) => item._id}
-                    renderItem={({ item }) => (
-                        <CallItem call={item} currentUserId={currentUserId} />
-                    )}
+                    renderItem={({ item }) => <CallItem call={item} currentUserId={currentUserId} />}
                     contentContainerStyle={calls.length === 0 ? { flexGrow: 1 } : { paddingBottom: 24 }}
                     ListEmptyComponent={
                         isLoading ? (
                             <View className="flex-1 items-center justify-center">
                                 <ActivityIndicator color="#6C5CE7" />
                             </View>
-                        ) : emptyState
+                        ) : (
+                            emptyState
+                        )
                     }
                     refreshControl={
                         <RefreshControl
