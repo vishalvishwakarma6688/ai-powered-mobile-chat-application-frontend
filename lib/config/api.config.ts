@@ -14,7 +14,7 @@ import Constants from 'expo-constants';
  * 
  * Look for your Wi-Fi adapter's IPv4 address (e.g., 192.168.x.x)
  */
-const SERVER_IP = '192.168.0.110'; // 👈 Current IP - Updated automatically
+const SERVER_IP = '192.168.0.113'; // 👈 Current IP - Updated automatically
 const SERVER_PORT = 5000;
 
 /**

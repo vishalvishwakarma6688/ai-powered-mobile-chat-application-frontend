@@ -30,11 +30,12 @@ function RootLayoutContent() {
 
     const inAuthGroup = segments[0] === '(tabs)';
     const inChatScreen = segments[0] === 'chat';
+    const inCallScreen = segments[0] === 'call';
 
-    if (isAuthenticated && !inAuthGroup && !inChatScreen) {
+    if (isAuthenticated && !inAuthGroup && !inChatScreen && !inCallScreen) {
       // User is authenticated but not in protected routes, redirect to main app
       router.replace('/(tabs)');
-    } else if (!isAuthenticated && (inAuthGroup || inChatScreen)) {
+    } else if (!isAuthenticated && (inAuthGroup || inChatScreen || inCallScreen)) {
       // User is not authenticated but trying to access protected routes, redirect to login
       router.replace('/login');
     }
@@ -53,6 +54,22 @@ function RootLayoutContent() {
       <Stack.Screen name="login" options={{ contentStyle: { backgroundColor: BG } }} />
       <Stack.Screen
         name="chat/[id]"
+        options={{
+          contentStyle: { backgroundColor: BG },
+          animation: 'slide_from_right',
+          presentation: 'card',
+        }}
+      />
+      <Stack.Screen
+        name="call/incoming"
+        options={{
+          contentStyle: { backgroundColor: BG },
+          animation: 'slide_from_bottom',
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="call/[callId]"
         options={{
           contentStyle: { backgroundColor: BG },
           animation: 'slide_from_right',

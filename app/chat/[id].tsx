@@ -24,7 +24,9 @@ import { useUploadAndSendDocument } from '../../lib/hooks/message/useDocumentUpl
 import { useSendLocation } from '../../lib/hooks/message/useLocation';
 import { useSendContact } from '../../lib/hooks/message/useContact';
 import { useAIChat, useSendAIMessage } from '../../lib/hooks/ai/useAIChat';
+import { useInitiateCall } from '../../lib/hooks/call';
 import { useAuthStore } from '../../lib/store/authStore';
+import { useCallStore } from '../../lib/store/callStore';
 import { muteChat, Chat } from '../../lib/api/chat/chatApi';
 import { useSocket } from '../../lib/socket/socketContext';
 import MessageList from '../../components/chat/MessageList';
@@ -105,6 +107,9 @@ export default function ChatScreen() {
     const isAIChatAssistant = aiChatData?.data?._id === id || chatInfo?.participants?.some(p =>
         p.userId?._id === AI_BOT_ID
     ) || false;
+    const showCallActions = !isAIChatAssistant
+        && !chatInfo?.isGroup
+        && !!chatInfo?.participants?.find((participant) => participant.userId?._id !== user?._id);
 
     // Fetch pinned messages
     const { data: pinnedData } = usePinnedMessages(id || '');
@@ -127,6 +132,7 @@ export default function ChatScreen() {
 
     // AI Message mutation
     const { mutate: sendAIMessage } = useSendAIMessage();
+    const { mutateAsync: initiateCall } = useInitiateCall();
 
     // Reaction mutations
     const { mutate: addReaction } = useAddReaction({
@@ -564,6 +570,41 @@ export default function ChatScreen() {
 
     const handleCancelAutoDelete = (messageId: string) => {
         cancelAutoDelete(messageId);
+    };
+
+    const handleStartCall = async (type: 'audio' | 'video') => {
+        const callParticipant = chatInfo?.participants?.find((participant) => participant.userId?._id !== user?._id)?.userId || null;
+
+        if (!id || !user || !callParticipant || isAIChatAssistant) return;
+
+        try {
+            const response = await initiateCall({
+                participantIds: [callParticipant._id],
+                type,
+                chatId: id,
+            });
+
+            useCallStore.getState().setActiveCall({
+                callId: response.data._id,
+                role: 'caller',
+                type,
+                peerId: callParticipant._id,
+                peerName: callParticipant.username,
+                peerProfilePic: callParticipant.profilePic || null,
+                chatId: id,
+                status: 'ringing',
+            });
+
+            router.push(`/call/${response.data._id}`);
+        } catch (error) {
+            console.error('❌ Failed to start call:', error);
+            setAlertConfig({
+                visible: true,
+                title: 'Call Error',
+                message: 'Unable to start the call. Please try again.',
+                buttons: [{ text: 'OK', style: 'default' }],
+            });
+        }
     };
 
     const handleConfirmAutoDelete = (duration: number) => {
@@ -1297,6 +1338,23 @@ export default function ChatScreen() {
                     </Text>
                 </TouchableOpacity>
 
+                {showCallActions && (
+                    <View className="flex-row items-center ml-1">
+                        <TouchableOpacity
+                            className="w-10 h-10 items-center justify-center"
+                            onPress={() => handleStartCall('video')}
+                        >
+                            <Ionicons name="videocam-outline" size={22} color="#94A3B8" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            className="w-10 h-10 items-center justify-center"
+                            onPress={() => handleStartCall('audio')}
+                        >
+                            <Ionicons name="call-outline" size={20} color="#94A3B8" />
+                        </TouchableOpacity>
+                    </View>
+                )}
+
                 {/* Options Menu */}
                 <TouchableOpacity
                     className="w-10 h-10 items-center justify-center"
@@ -1304,6 +1362,7 @@ export default function ChatScreen() {
                 >
                     <Ionicons name="ellipsis-vertical" size={20} color="#94A3B8" />
                 </TouchableOpacity>
+
             </View>
 
             {/* Pinned Message Banner */}

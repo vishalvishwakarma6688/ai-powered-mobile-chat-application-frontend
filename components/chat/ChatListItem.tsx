@@ -144,8 +144,8 @@ export default function ChatListItem({ chat, currentUserId, isAIChat = false }: 
                     </View>
                 )}
 
-                {/* Online Indicator - Only for one-on-one chats (AI is always online) */}
-                {((isOnline && !chat.isGroup) || isAIChat) && !chat.isGroup && (
+                {/* Online Indicator - Only for non-AI one-on-one chats */}
+                {isOnline && !chat.isGroup && !isAIChat && (
                     <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#0F172A]" />
                 )}
             </View>

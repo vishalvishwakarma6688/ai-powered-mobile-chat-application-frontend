@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
+import { useCallStore } from '../store/callStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { GetMessagesResponse, Message } from '../api/message/messageApi';
 import { GetChatsResponse } from '../api/chat/chatApi';
@@ -538,6 +539,95 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
             // Update chats list to reflect online status
             queryClient.invalidateQueries({ queryKey: ['chats'] });
+        });
+
+        newSocket.on('call:incoming', (data: {
+            callId: string;
+            caller: { _id: string; username: string; profilePic?: string | null };
+            type: 'audio' | 'video';
+            chatId?: string;
+        }) => {
+            console.log('📞 Incoming call:', data);
+
+            const currentIncoming = useCallStore.getState().incomingCall;
+            if (currentIncoming?.callId === data.callId) return;
+
+            useCallStore.getState().setIncomingCall({
+                callId: data.callId,
+                caller: data.caller,
+                type: data.type,
+                chatId: data.chatId,
+            });
+
+            import('expo-router').then(({ router }) => {
+                router.push({
+                    pathname: '/call/incoming',
+                    params: {
+                        callId: data.callId,
+                        callerId: data.caller._id,
+                        callerName: data.caller.username,
+                        callerProfilePic: data.caller.profilePic || '',
+                        type: data.type,
+                        chatId: data.chatId || '',
+                    },
+                });
+            });
+        });
+
+        newSocket.on('call:accepted', (data: { callId: string; userId: string }) => {
+            console.log('📞 Call accepted:', data);
+
+            const activeCall = useCallStore.getState().activeCall;
+            if (activeCall?.callId === data.callId) {
+                useCallStore.getState().updateActiveCall({ status: 'connected' });
+            }
+        });
+
+        newSocket.on('call:rejected', (data: { callId: string; userId: string }) => {
+            console.log('📞 Call rejected:', data);
+
+            const activeCall = useCallStore.getState().activeCall;
+            if (activeCall?.callId === data.callId) {
+                useCallStore.getState().clearCallState();
+                import('expo-router').then(({ router }) => {
+                    router.back();
+                });
+            }
+        });
+
+        newSocket.on('call:ended', (data: { callId: string; endedBy: string }) => {
+            console.log('📞 Call ended:', data);
+
+            const activeCall = useCallStore.getState().activeCall;
+            const incomingCall = useCallStore.getState().incomingCall;
+
+            if (activeCall?.callId === data.callId || incomingCall?.callId === data.callId) {
+                useCallStore.getState().clearCallState();
+                import('expo-router').then(({ router }) => {
+                    router.back();
+                });
+            }
+        });
+
+        newSocket.on('call:offer', (data: { callId: string; offer: any; from: string }) => {
+            console.log('📞 Call offer received:', data.callId);
+            useCallStore.getState().setPendingOffer({
+                callId: data.callId,
+                from: data.from,
+                offer: data.offer,
+            });
+        });
+
+        newSocket.on('call:answer', (data: { callId: string; answer: any; from: string }) => {
+            console.log('📞 Call answer received:', data.callId);
+        });
+
+        newSocket.on('call:ice-candidate', (data: { callId: string; candidate: any; from: string }) => {
+            console.log('📞 ICE candidate received:', data.callId);
+            useCallStore.getState().addPendingIceCandidate({
+                callId: data.callId,
+                candidate: data.candidate,
+            });
         });
 
         setSocket(newSocket);

@@ -104,7 +104,7 @@ export const ENDPOINTS = {
 
     // ─── Calls ───────────────────────────────────────────────────────────────
     CALLS: {
-        INITIATE: '/api/calls',
+        INITIATE: '/api/calls/initiate',
         ACCEPT: (callId: string) => `/api/calls/${callId}/accept`,
         REJECT: (callId: string) => `/api/calls/${callId}/reject`,
         END: (callId: string) => `/api/calls/${callId}/end`,
