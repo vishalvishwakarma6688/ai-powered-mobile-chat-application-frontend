@@ -32,6 +32,15 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env.development
+.env.staging
+.env.production
+
+# EAS
+.eas/
+android-service-account.json
+*.keystore
+*.jks
 
 # typescript
 *.tsbuildinfo

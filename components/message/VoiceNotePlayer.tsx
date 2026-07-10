@@ -2,6 +2,21 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
 import { Audio } from 'expo-av';
+import { API_URL } from '../../lib/config/api.config';
+
+/**
+ * Helper function to get full media URL
+ * Handles both local paths and Cloudinary URLs
+ */
+const getFullMediaUrl = (mediaPath: string): string => {
+    // If it's already a full URL (Cloudinary, etc.), return as is
+    if (mediaPath.startsWith('http://') || mediaPath.startsWith('https://')) {
+        return mediaPath;
+    }
+
+    // For local paths, prepend the API URL
+    return `${API_URL}${mediaPath}`;
+};
 
 interface VoiceNotePlayerProps {
     audioUrl: string;
@@ -47,10 +62,8 @@ export default function VoiceNotePlayer({
         try {
             setIsLoading(true);
 
-            // Construct full URL with server IP
-            const fullUrl = audioUrl.startsWith('http')
-                ? audioUrl
-                : `http://172.18.58.26:5000${audioUrl}`;
+            // Construct full URL with API_URL helper
+            const fullUrl = getFullMediaUrl(audioUrl);
 
             console.log('🎵 Loading audio from:', fullUrl);
 

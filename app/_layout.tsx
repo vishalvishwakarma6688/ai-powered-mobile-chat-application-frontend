@@ -31,11 +31,12 @@ function RootLayoutContent() {
     const inAuthGroup = segments[0] === '(tabs)';
     const inChatScreen = segments[0] === 'chat';
     const inCallScreen = segments[0] === 'call';
+    const inSettingsScreen = segments[0] === 'settings';
 
-    if (isAuthenticated && !inAuthGroup && !inChatScreen && !inCallScreen) {
+    if (isAuthenticated && !inAuthGroup && !inChatScreen && !inCallScreen && !inSettingsScreen) {
       // User is authenticated but not in protected routes, redirect to main app
       router.replace('/(tabs)');
-    } else if (!isAuthenticated && (inAuthGroup || inChatScreen || inCallScreen)) {
+    } else if (!isAuthenticated && (inAuthGroup || inChatScreen || inCallScreen || inSettingsScreen)) {
       // User is not authenticated but trying to access protected routes, redirect to login
       router.replace('/login');
     }
@@ -45,54 +46,37 @@ function RootLayoutContent() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'none',
+        animation: 'fade',
+        animationDuration: 150,
         contentStyle: { backgroundColor: BG },
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="signup" options={{ contentStyle: { backgroundColor: BG } }} />
-      <Stack.Screen name="login" options={{ contentStyle: { backgroundColor: BG } }} />
-      <Stack.Screen
-        name="chat/[id]"
-        options={{
-          contentStyle: { backgroundColor: BG },
-          animation: 'slide_from_right',
-          presentation: 'card',
-        }}
-      />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="signup" />
+      <Stack.Screen name="login" />
+      <Stack.Screen name="chat/[id]" />
       <Stack.Screen
         name="call/incoming"
         options={{
-          contentStyle: { backgroundColor: BG },
           animation: 'slide_from_bottom',
           presentation: 'modal',
         }}
       />
-      <Stack.Screen
-        name="call/[callId]"
-        options={{
-          contentStyle: { backgroundColor: BG },
-          animation: 'slide_from_right',
-          presentation: 'card',
-        }}
-      />
+      <Stack.Screen name="call/[callId]" />
       <Stack.Screen
         name="blocked-users"
         options={{
-          contentStyle: { backgroundColor: BG },
-          animation: 'slide_from_right',
           presentation: 'modal',
         }}
       />
-      <Stack.Screen
-        name="settings"
-        options={{
-          contentStyle: { backgroundColor: BG },
-          animation: 'slide_from_right',
-          presentation: 'card',
-        }}
-      />
-      <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: BG } }} />
+      <Stack.Screen name="settings/edit-profile" />
+      <Stack.Screen name="settings/privacy" />
+      <Stack.Screen name="settings/notifications" />
+      <Stack.Screen name="settings/appearance" />
+      <Stack.Screen name="settings/language" />
+      <Stack.Screen name="settings/help" />
+      <Stack.Screen name="settings/about" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }

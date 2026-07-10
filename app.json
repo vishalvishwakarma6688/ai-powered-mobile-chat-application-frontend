@@ -1,23 +1,35 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "ChatApp",
+    "slug": "chat-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "chatapp",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "owner": "vishalexpoaccount",
     "extra": {
-      "apiUrl": "http://192.168.0.113:5000"
+      "apiUrl": "http://192.168.0.109:5000",
+      "eas": {
+        "projectId": "YOUR_PROJECT_ID_WILL_BE_ADDED_BY_EAS"
+      }
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.iosmobile.chatapp",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSContactsUsageDescription": "Allow $(PRODUCT_NAME) to access your contacts to share them in chats."
+        "NSContactsUsageDescription": "Allow $(PRODUCT_NAME) to access your contacts to share them in chats.",
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera to take photos and videos.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone for voice messages and calls.",
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photo library to share photos and videos.",
+        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access your location to share it in chats."
       }
     },
     "android": {
+      "package": "com.androidmobile.chatapp",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -29,7 +41,14 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "READ_CONTACTS"
+        "READ_CONTACTS",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_AUDIO"
       ]
     },
     "web": {
@@ -60,6 +79,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/YOUR_PROJECT_ID_WILL_BE_ADDED_BY_EAS"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

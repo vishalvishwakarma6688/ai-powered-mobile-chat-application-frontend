@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useAuthStore } from '../../lib/store/authStore';
+import { BASE_URL } from '../../lib/api/client';
 import CustomAlert from '../../components/common/CustomAlert';
 
 export default function SettingsScreen() {
@@ -57,10 +58,21 @@ export default function SettingsScreen() {
                 {/* User Info Section */}
                 <View className="px-6 py-6 border-b border-slate-800">
                     <View className="flex-row items-center">
-                        <View className="w-16 h-16 rounded-full bg-[#6C5CE7] items-center justify-center">
-                            <Text className="text-white text-2xl font-bold">
-                                {user?.username?.charAt(0).toUpperCase() || 'U'}
-                            </Text>
+                        <View className="w-16 h-16 rounded-full overflow-hidden border border-slate-700 bg-slate-800 items-center justify-center">
+                            {user?.profilePic ? (
+                                <Image
+                                    source={{ 
+                                        uri: user.profilePic.startsWith('http') || user.profilePic.startsWith('file://') 
+                                            ? user.profilePic 
+                                            : `${BASE_URL}${user.profilePic}` 
+                                    }}
+                                    className="w-full h-full"
+                                />
+                            ) : (
+                                <Text className="text-white text-2xl font-bold">
+                                    {user?.username?.charAt(0).toUpperCase() || 'U'}
+                                </Text>
+                            )}
                         </View>
                         <View className="ml-4 flex-1">
                             <Text className="text-white text-lg font-semibold">
@@ -70,9 +82,6 @@ export default function SettingsScreen() {
                                 {user?.email || 'email@example.com'}
                             </Text>
                         </View>
-                        <TouchableOpacity className="p-2">
-                            <Ionicons name="chevron-forward" size={24} color="#94A3B8" />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -84,13 +93,8 @@ export default function SettingsScreen() {
                     </Text>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'Coming Soon',
-                            message: 'Profile editing will be available soon!',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/edit-profile')}
                     >
                         <Ionicons name="person-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">Edit Profile</Text>
@@ -98,13 +102,8 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'Coming Soon',
-                            message: 'Privacy settings will be available soon!',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/privacy')}
                     >
                         <Ionicons name="lock-closed-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">Privacy</Text>
@@ -112,13 +111,8 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'Coming Soon',
-                            message: 'Notifications settings will be available soon!',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/notifications')}
                     >
                         <Ionicons name="notifications-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">Notifications</Text>
@@ -131,13 +125,8 @@ export default function SettingsScreen() {
                     </Text>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'Coming Soon',
-                            message: 'Theme settings will be available soon!',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/appearance')}
                     >
                         <Ionicons name="color-palette-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">Appearance</Text>
@@ -145,13 +134,8 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'Coming Soon',
-                            message: 'Language settings will be available soon!',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/language')}
                     >
                         <Ionicons name="language-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">Language</Text>
@@ -164,13 +148,8 @@ export default function SettingsScreen() {
                     </Text>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'Help & Support',
-                            message: 'Contact us at support@chatapp.com',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/help')}
                     >
                         <Ionicons name="help-circle-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">Help & Support</Text>
@@ -178,13 +157,8 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        className="flex-row items-center py-4 border-b border-slate-800"
-                        onPress={() => setAlertConfig({
-                            visible: true,
-                            title: 'About',
-                            message: 'ChatApp v1.0.0\nNext-gen chat experience',
-                            buttons: [{ text: 'OK', style: 'default' }],
-                        })}
+                        className="flex-row items-center py-4 border-b border-slate-800 active:opacity-75"
+                        onPress={() => router.push('/settings/about')}
                     >
                         <Ionicons name="information-circle-outline" size={24} color="#94A3B8" />
                         <Text className="text-white text-base ml-4 flex-1">About</Text>

@@ -6,9 +6,19 @@ interface UserCardProps {
     user: SearchUser;
     onStartChat: (userId: string) => void;
     isCreatingChat?: boolean;
+    isContact?: boolean;
+    onAddContact?: (userId: string) => void;
+    isAddingContact?: boolean;
 }
 
-export default function UserCard({ user, onStartChat, isCreatingChat }: UserCardProps) {
+export default function UserCard({ 
+    user, 
+    onStartChat, 
+    isCreatingChat,
+    isContact = true, // Default to true for backward compatibility
+    onAddContact,
+    isAddingContact
+}: UserCardProps) {
     // Get first letter of username for avatar
     const avatarLetter = user.username.charAt(0).toUpperCase();
 
@@ -29,10 +39,8 @@ export default function UserCard({ user, onStartChat, isCreatingChat }: UserCard
     };
 
     return (
-        <TouchableOpacity
+        <View
             className="flex-row items-center py-4 px-6 border-b border-slate-800"
-            activeOpacity={0.7}
-            disabled={isCreatingChat}
         >
             {/* Avatar */}
             <View className="w-14 h-14 rounded-full bg-[#6C5CE7] items-center justify-center">
@@ -44,9 +52,9 @@ export default function UserCard({ user, onStartChat, isCreatingChat }: UserCard
             </View>
 
             {/* User Info */}
-            <View className="flex-1 ml-4">
+            <View className="flex-1 ml-4 mr-2">
                 <View className="flex-row items-center">
-                    <Text className="text-white font-semibold text-base">
+                    <Text className="text-white font-semibold text-base" numberOfLines={1}>
                         {user.username}
                     </Text>
                     {user.isOnline && (
@@ -69,22 +77,40 @@ export default function UserCard({ user, onStartChat, isCreatingChat }: UserCard
                 )}
             </View>
 
-            {/* Start Chat Button */}
-            <TouchableOpacity
-                onPress={() => onStartChat(user._id)}
-                disabled={isCreatingChat}
-                className="bg-[#6C5CE7] px-4 py-2 rounded-full flex-row items-center"
-                activeOpacity={0.8}
-            >
-                {isCreatingChat ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                    <>
-                        <Ionicons name="chatbubble" size={16} color="#fff" />
-                        <Text className="text-white font-semibold ml-2 text-sm">Chat</Text>
-                    </>
-                )}
-            </TouchableOpacity>
-        </TouchableOpacity>
+            {/* Action Buttons */}
+            {isContact ? (
+                <TouchableOpacity
+                    onPress={() => onStartChat(user._id)}
+                    disabled={isCreatingChat}
+                    className="bg-[#6C5CE7] px-4 py-2 rounded-full flex-row items-center active:opacity-85"
+                    activeOpacity={0.8}
+                >
+                    {isCreatingChat ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                        <>
+                            <Ionicons name="chatbubble" size={16} color="#fff" />
+                            <Text className="text-white font-semibold ml-1.5 text-sm">Chat</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity
+                    onPress={() => onAddContact && onAddContact(user._id)}
+                    disabled={isAddingContact}
+                    className="bg-slate-800 border border-slate-700 px-4 py-2 rounded-full flex-row items-center active:opacity-85"
+                    activeOpacity={0.8}
+                >
+                    {isAddingContact ? (
+                        <ActivityIndicator size="small" color="#6C5CE7" />
+                    ) : (
+                        <>
+                            <Ionicons name="person-add" size={16} color="#6C5CE7" />
+                            <Text className="text-[#6C5CE7] font-semibold ml-1.5 text-sm">Add</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            )}
+        </View>
     );
 }

@@ -1,16 +1,19 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useChats } from '../../lib/hooks/chat/useChats';
 import { useAuthStore } from '../../lib/store/authStore';
+import { useSocket } from '../../lib/socket/socketContext';
+import { BASE_URL } from '../../lib/api/client';
 import ChatList from '../../components/chat/ChatList';
 import CustomPopupMenu, { PopupMenuItem } from '../../components/common/CustomPopupMenu';
 import CreateGroupDialog from '../../components/chat/CreateGroupDialog';
 
 export default function ChatsScreen() {
   const { user } = useAuthStore();
+  const { isConnected } = useSocket();
   const [showMenu, setShowMenu] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
 
@@ -91,18 +94,62 @@ export default function ChatsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#0F172A]" style={{ backgroundColor: '#0F172A' }}>
+      {/* Network Status Banner */}
+      {!isConnected && (
+        <View className="bg-amber-600/90 py-1.5 px-4 flex-row items-center justify-center" style={{ backgroundColor: '#D97706' }}>
+          <Ionicons name="warning-outline" size={14} color="#fff" style={{ marginRight: 6 }} />
+          <Text className="text-white text-xs font-semibold">
+            Connecting to server...
+          </Text>
+        </View>
+      )}
+
       {/* Header */}
       <View className="px-6 py-4 border-b border-slate-800 flex-row items-center justify-between">
-        <Text className="text-white text-2xl font-bold">Chats</Text>
-        <View className="flex-row items-center space-x-2">
-          <TouchableOpacity
-            className="w-10 h-10 rounded-full bg-[#6C5CE7] items-center justify-center"
-            onPress={handleNewChat}
+        <View className="flex-row items-center">
+          {/* User Profile Avatar */}
+          <TouchableOpacity 
+            onPress={() => router.push('/(tabs)/settings')} 
+            className="mr-3 active:opacity-80"
           >
-            <Ionicons name="create" size={20} color="#fff" />
+            {user?.profilePic ? (
+              <Image
+                source={{ 
+                  uri: user.profilePic.startsWith('http') || user.profilePic.startsWith('file://') 
+                    ? user.profilePic 
+                    : `${BASE_URL}${user.profilePic}` 
+                }}
+                className="w-10 h-10 rounded-full border border-slate-700 bg-slate-800"
+              />
+            ) : (
+              <View className="w-10 h-10 rounded-full bg-[#6C5CE7] items-center justify-center border border-slate-700">
+                <Text className="text-white font-bold text-base">
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
+          <View>
+            <Text className="text-white text-xl font-bold">Chats</Text>
+            <Text className="text-slate-400 text-xs mt-0.5">
+              Logged in as <Text className="text-[#6C5CE7] font-semibold">{user?.username || 'User'}</Text>
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-row items-center space-x-2">
+          {/* New Chat Button */}
           <TouchableOpacity
-            className="w-10 h-10 items-center justify-center"
+            className="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 items-center justify-center active:bg-slate-700"
+            onPress={handleNewChat}
+            style={{ marginRight: 8 }}
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
+          </TouchableOpacity>
+
+          {/* More Menu Button */}
+          <TouchableOpacity
+            className="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700 items-center justify-center active:bg-slate-700"
             onPress={() => setShowMenu(true)}
           >
             <Ionicons name="ellipsis-vertical" size={20} color="#94A3B8" />

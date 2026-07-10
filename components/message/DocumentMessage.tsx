@@ -2,6 +2,21 @@ import { View, Text, TouchableOpacity, Linking, StyleSheet, Alert } from 'react-
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { API_URL } from '../../lib/config/api.config';
+
+/**
+ * Helper function to get full media URL
+ * Handles both local paths and Cloudinary URLs
+ */
+const getFullMediaUrl = (mediaPath: string): string => {
+    // If it's already a full URL (Cloudinary, etc.), return as is
+    if (mediaPath.startsWith('http://') || mediaPath.startsWith('https://')) {
+        return mediaPath;
+    }
+
+    // For local paths, prepend the API URL
+    return `${API_URL}${mediaPath}`;
+};
 
 interface DocumentMessageProps {
     fileName: string;
@@ -61,7 +76,7 @@ export default function DocumentMessage({
     // Handle download/open
     const handleDownload = async () => {
         try {
-            const fullUrl = `http://172.18.58.26:5000${fileUrl}`;
+            const fullUrl = getFullMediaUrl(fileUrl);
             console.log('📄 Downloading document:', fullUrl);
 
             // Download the file

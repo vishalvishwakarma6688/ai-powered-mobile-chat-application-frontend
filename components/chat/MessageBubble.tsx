@@ -10,6 +10,21 @@ import VideoPlayer from '../message/VideoPlayer';
 import LocationMessage from '../message/LocationMessage';
 import DocumentMessage from '../message/DocumentMessage';
 import ContactMessage from '../message/ContactMessage';
+import { API_URL } from '../../lib/config/api.config';
+
+/**
+ * Helper function to get full media URL
+ * Handles both local paths and Cloudinary URLs
+ */
+const getFullMediaUrl = (mediaPath: string): string => {
+    // If it's already a full URL (Cloudinary, etc.), return as is
+    if (mediaPath.startsWith('http://') || mediaPath.startsWith('https://')) {
+        return mediaPath;
+    }
+
+    // For local paths, prepend the API URL
+    return `${API_URL}${mediaPath}`;
+};
 
 interface MessageBubbleProps {
     message: Message;
@@ -322,7 +337,7 @@ export default function MessageBubble({
                                 activeOpacity={0.9}
                             >
                                 <Image
-                                    source={{ uri: `http://172.18.58.26:5000${message.media.url}` }}
+                                    source={{ uri: getFullMediaUrl(message.media.url) }}
                                     style={{
                                         width: 250,
                                         height: 250,
@@ -340,7 +355,7 @@ export default function MessageBubble({
                     ) : message.type === 'video' && message.media?.url ? (
                         <View style={{ overflow: 'hidden', borderRadius: 12 }}>
                             <VideoPlayer
-                                videoUrl={`http://172.18.58.26:5000${message.media.url}`}
+                                videoUrl={getFullMediaUrl(message.media.url)}
                                 isOwnMessage={isOwnMessage}
                             />
                             {message.text && (
@@ -488,7 +503,7 @@ export default function MessageBubble({
             {message.type === 'image' && message.media?.url && (
                 <ImageViewer
                     visible={showImageViewer}
-                    imageUrl={`http://172.18.58.26:5000${message.media.url}`}
+                    imageUrl={getFullMediaUrl(message.media.url)}
                     onClose={() => setShowImageViewer(false)}
                 />
             )}

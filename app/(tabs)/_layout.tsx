@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { View, Platform } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -10,15 +11,16 @@ export default function TabLayout() {
           backgroundColor: '#0F172A',
           borderTopColor: '#1E293B',
           borderTopWidth: 1,
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 8,
+          height: Platform.OS === 'ios' ? 84 : 64,
         },
         tabBarActiveTintColor: '#6C5CE7',
-        tabBarInactiveTintColor: '#475569',
+        tabBarInactiveTintColor: '#64748B',
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 11,
+          fontWeight: '700',
+          marginTop: 2,
         },
       }}
     >
@@ -26,8 +28,13 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Chats',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={focused ? "chatbubbles" : "chatbubbles-outline"} size={22} color={color} />
+              {focused && (
+                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#6C5CE7', marginTop: 2, position: 'absolute', bottom: -6 }} />
+              )}
+            </View>
           ),
         }}
       />
@@ -35,8 +42,13 @@ export default function TabLayout() {
         name="calls"
         options={{
           title: 'Calls',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="call" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={focused ? "call" : "call-outline"} size={22} color={color} />
+              {focused && (
+                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#6C5CE7', marginTop: 2, position: 'absolute', bottom: -6 }} />
+              )}
+            </View>
           ),
         }}
       />
@@ -44,8 +56,13 @@ export default function TabLayout() {
         name="contacts"
         options={{
           title: 'Contacts',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={focused ? "people" : "people-outline"} size={22} color={color} />
+              {focused && (
+                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#6C5CE7', marginTop: 2, position: 'absolute', bottom: -6 }} />
+              )}
+            </View>
           ),
         }}
       />
@@ -53,8 +70,13 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={focused ? "settings" : "settings-outline"} size={22} color={color} />
+              {focused && (
+                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#6C5CE7', marginTop: 2, position: 'absolute', bottom: -6 }} />
+              )}
+            </View>
           ),
         }}
       />

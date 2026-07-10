@@ -12,6 +12,7 @@ interface AuthState {
     setAuth: (user: AuthUser, token: string) => Promise<void>;
     clearAuth: () => Promise<void>;
     loadAuth: () => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 /**
@@ -65,6 +66,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             console.error('Failed to clear storage:', error);
             // Don't throw - state is already cleared
         }
+    },
+
+    /**
+     * Clear credentials and sign out (compatibility alias for token expiry redirects)
+     */
+    logout: async () => {
+        await get().clearAuth();
     },
 
     /**

@@ -1,6 +1,7 @@
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SearchUser } from '../../lib/api/search/searchApi';
+import { Contact } from '../../lib/api/user/userApi';
 import UserCard from './UserCard';
 
 interface SearchResultsProps {
@@ -10,6 +11,9 @@ interface SearchResultsProps {
     searchQuery: string;
     onStartChat: (userId: string) => void;
     creatingChatForUserId?: string;
+    contacts?: Contact[];
+    onAddContact?: (userId: string) => void;
+    addingContactId?: string;
 }
 
 export default function SearchResults({
@@ -19,6 +23,9 @@ export default function SearchResults({
     searchQuery,
     onStartChat,
     creatingChatForUserId,
+    contacts = [],
+    onAddContact,
+    addingContactId,
 }: SearchResultsProps) {
     // Loading state
     if (isLoading) {
@@ -87,13 +94,19 @@ export default function SearchResults({
         <FlatList
             data={users}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-                <UserCard
-                    user={item}
-                    onStartChat={onStartChat}
-                    isCreatingChat={creatingChatForUserId === item._id}
-                />
-            )}
+            renderItem={({ item }) => {
+                const isContact = contacts.some(c => c._id === item._id);
+                return (
+                    <UserCard
+                        user={item}
+                        onStartChat={onStartChat}
+                        isCreatingChat={creatingChatForUserId === item._id}
+                        isContact={isContact}
+                        onAddContact={onAddContact}
+                        isAddingContact={addingContactId === item._id}
+                    />
+                );
+            }}
             contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
         />
