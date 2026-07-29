@@ -21,13 +21,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.AUTO_BUMP_PAT }}
+          token: ${{ secrets.AUTO_BUMP_PAT || github.token }}
           fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Configure Git
         run: |
