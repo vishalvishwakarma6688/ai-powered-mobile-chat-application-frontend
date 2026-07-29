@@ -15,6 +15,11 @@ export interface LoginPayload {
     password: string;
 }
 
+export interface UserPrivacy {
+    lastSeen?: 'everyone' | 'contacts' | 'nobody';
+    profilePhoto?: 'everyone' | 'contacts' | 'nobody';
+}
+
 export interface AuthUser {
     _id: string;
     username: string;
@@ -24,6 +29,7 @@ export interface AuthUser {
     bio: string;
     isOnline: boolean;
     lastSeen: string;
+    privacy?: UserPrivacy;
     createdAt: string;
 }
 

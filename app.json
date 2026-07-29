@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "owner": "vishalexpoaccount",
     "extra": {
-      "apiUrl": "http://192.168.0.109:5000",
+      "apiUrl": "http://192.168.0.112:5000",
       "eas": {
         "projectId": "YOUR_PROJECT_ID_WILL_BE_ADDED_BY_EAS"
       }

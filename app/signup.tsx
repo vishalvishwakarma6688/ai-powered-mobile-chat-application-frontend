@@ -118,7 +118,12 @@ export default function Signup() {
         }
 
         // Submit registration
-        register(form);
+        register({
+            username: form.username.trim(),
+            password: form.password,
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+        });
     };
 
     return (

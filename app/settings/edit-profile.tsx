@@ -284,7 +284,7 @@ export default function EditProfileScreen() {
                                 placeholderTextColor="#475569"
                                 autoCapitalize="none"
                                 autoCorrect={false}
-                                disabled={isSaving}
+                                editable={!isSaving}
                                 className="flex-1 text-white ml-2 text-base"
                             />
                         </View>
@@ -311,7 +311,7 @@ export default function EditProfileScreen() {
                                 placeholderTextColor="#475569"
                                 multiline
                                 numberOfLines={3}
-                                disabled={isSaving}
+                                editable={!isSaving}
                                 className="flex-1 text-white ml-2 text-base leading-5"
                                 style={{ 
                                     minHeight: 60,

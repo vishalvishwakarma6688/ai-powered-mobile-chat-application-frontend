@@ -39,7 +39,13 @@ apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const statusCode = error?.response?.status;
-        const message = error?.response?.data?.message || error?.message || 'Something went wrong';
+        const backendError = error?.response?.data?.error;
+        const message =
+            (typeof backendError === 'object' && backendError?.message) ||
+            (typeof backendError === 'string' && backendError) ||
+            error?.response?.data?.message ||
+            error?.message ||
+            'Something went wrong';
 
         // Handle token expiration (401 Unauthorized)
         if (statusCode === 401 && (message.includes('Token expired') || message.includes('Invalid token') || message.includes('Authentication'))) {

@@ -53,8 +53,8 @@ export const validateSignupForm = (form: {
     // Password validation
     if (!form.password) {
         errors.password = 'Password is required';
-    } else if (form.password.length < 6) {
-        errors.password = 'Password must be at least 6 characters';
+    } else if (form.password.length < 8) {
+        errors.password = 'Password must be at least 8 characters';
     } else if (form.password.length > 100) {
         errors.password = 'Password must be less than 100 characters';
     }

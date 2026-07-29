@@ -1,0 +1,100 @@
+name: Build & Release Mobile App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Setup Java SDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Update package.json and app.json version to match tag
+        run: |
+          node -e "
+            const fs = require('fs');
+            const tag = process.env.GITHUB_REF_NAME || '';
+            const tagVersion = tag.replace(/^v/, '');
+            console.log('Setting package.json and app.json version to ' + tagVersion);
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = tagVersion;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.version = tagVersion;
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n', 'utf8');
+          "
+
+      - name: Prebuild & Build Android APK
+        run: |
+          npx expo prebuild --platform android --clean
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Build Web Export
+        run: |
+          npx expo export --platform web || true
+
+      - name: Collect Distributable Artifacts
+        run: |
+          mkdir -p dist-artifacts
+          TAG_NAME="${GITHUB_REF_NAME}"
+
+          # Collect Android APK
+          APK_PATH=$(find android/app/build/outputs/apk -name "*.apk" 2>/dev/null | head -n 1)
+          if [ -n "$APK_PATH" ]; then
+            cp "$APK_PATH" "dist-artifacts/ChatApp-${TAG_NAME}.apk"
+            echo "Collected APK: ChatApp-${TAG_NAME}.apk"
+          fi
+
+          # Collect Web Dist Bundle if available
+          if [ -d "dist" ]; (zip -r "dist-artifacts/ChatApp-web-${TAG_NAME}.zip" dist); then
+            echo "Collected Web bundle: ChatApp-web-${TAG_NAME}.zip"
+          fi
+        shell: bash
+
+      - name: Generate SHA-256 Checksums
+        working-directory: dist-artifacts
+        run: |
+          find . -maxdepth 1 -type f -not -name "SHA256SUMS*.txt" -print0 \
+            | sort -z \
+            | xargs -0 sha256sum \
+            | sed 's#  \./#  #' > SHA256SUMS-mobile.txt
+          test -s SHA256SUMS-mobile.txt
+          cat SHA256SUMS-mobile.txt
+        shell: bash
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: dist-artifacts/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
