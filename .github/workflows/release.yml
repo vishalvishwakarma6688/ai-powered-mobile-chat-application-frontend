@@ -48,6 +48,8 @@ jobs:
           "
 
       - name: Prebuild & Build Android APK
+        env:
+          EXPO_PUBLIC_API_URL: https://ai-powered-mobile-chat-application.onrender.com
         run: |
           npx expo prebuild --platform android --clean
           cd android
@@ -55,6 +57,8 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Build Web Export
+        env:
+          EXPO_PUBLIC_API_URL: https://ai-powered-mobile-chat-application.onrender.com
         run: |
           npx expo export --platform web || true
 

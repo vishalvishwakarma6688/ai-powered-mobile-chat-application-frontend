@@ -37,9 +37,8 @@
             },
             "ios": {
                 "simulator": false
-            },
             "env": {
-                "EXPO_PUBLIC_API_URL": "https://staging-api.yourapp.com"
+                "EXPO_PUBLIC_API_URL": "https://ai-powered-mobile-chat-application.onrender.com"
             }
         },
         "production": {
@@ -48,7 +47,7 @@
                 "buildType": "app-bundle"
             },
             "env": {
-                "EXPO_PUBLIC_API_URL": "https://api.yourapp.com"
+                "EXPO_PUBLIC_API_URL": "https://ai-powered-mobile-chat-application.onrender.com"
             }
         },
         "production-apk": {
