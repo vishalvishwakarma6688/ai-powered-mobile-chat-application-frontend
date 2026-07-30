@@ -19,6 +19,7 @@ export interface Chat {
         isMuted: boolean;
     }>;
     lastMessage?: {
+        messageId?: string;
         text?: string; // Backend uses 'text'
         content?: string; // Fallback for compatibility
         sender: {

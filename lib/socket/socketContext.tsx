@@ -55,7 +55,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         // Create socket connection
         const newSocket = io(SOCKET_URL, {
             auth: { token },
-            transports: ['websocket'],
+            transports: ['polling', 'websocket'],
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionAttempts: 5,
@@ -202,7 +202,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
                             lastMessage: {
                                 messageId: message._id,
                                 text: displayText,
-                                sender: message.sender,
+                                sender: {
+                                    _id: message.sender._id,
+                                    username: message.sender.username,
+                                    profilePic: message.sender.profilePic || undefined,
+                                },
                                 createdAt: message.createdAt,
                             },
                             updatedAt: message.createdAt,
