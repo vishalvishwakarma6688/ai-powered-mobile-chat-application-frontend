@@ -24,12 +24,11 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Setup Java SDK & Gradle Cache
+      - name: Setup Java SDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: gradle
 
       - name: Install Dependencies
         run: npm ci
