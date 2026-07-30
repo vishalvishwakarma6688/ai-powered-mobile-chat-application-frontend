@@ -48,6 +48,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin master
 
       - name: Bump Version
         run: |
@@ -65,15 +66,15 @@ jobs:
             console.log('Synced version ' + pkg.version + ' to app.json');
           "
 
-      - name: Commit & Push Version Change (with Race Condition Protection)
+      - name: Commit & Push Version Change
         run: |
           NEW_VERSION=$(node -p "require('./package.json').version")
           
-          # Only commit if files changed
-          if ! git diff --quiet package.json app.json; then
-            git add package.json app.json
+          # Stage version files including package-lock.json
+          git add package.json package-lock.json app.json
+          
+          if ! git diff --cached --quiet; then
             git commit -m "chore(release): bump version to v$NEW_VERSION"
-            git pull --rebase origin master
             git push origin master
           else
             echo "No version changes to commit."
