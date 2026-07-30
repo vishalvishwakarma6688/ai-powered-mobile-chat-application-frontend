@@ -24,13 +24,13 @@ export const getApiUrl = (): string => {
     // Check for environment variable or app.json override
     const envApiUrl = process.env.EXPO_PUBLIC_API_URL || Constants.expoConfig?.extra?.apiUrl;
     if (envApiUrl && !envApiUrl.includes('192.168.')) {
-        console.log('📌 Using API URL from environment/config:', envApiUrl);
+        console.log('Using API URL from environment/config:', envApiUrl);
         return envApiUrl;
     }
 
     // Default fallback to live Render backend URL
     const apiUrl = 'https://ai-powered-mobile-chat-application.onrender.com';
-    console.log('📌 Using API URL fallback:', apiUrl);
+    console.log('Using API URL fallback:', apiUrl);
     return apiUrl;
 };
 

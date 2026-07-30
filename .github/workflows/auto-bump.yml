@@ -7,9 +7,24 @@ on:
     paths-ignore:
       - '**.md'
       - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write
+
+concurrency:
+  group: auto-bump
+  cancel-in-progress: false
 
 jobs:
   bump:
@@ -36,8 +51,10 @@ jobs:
 
       - name: Bump Version
         run: |
-          # Increment patch version in package.json
-          npm version patch --no-git-tag-version
+          BUMP_TYPE="${{ inputs.bump_type || 'patch' }}"
+          echo "Bumping version ($BUMP_TYPE)..."
+          npm version $BUMP_TYPE --no-git-tag-version
+
           # Sync version in app.json as well
           node -e "
             const fs = require('fs');
@@ -48,15 +65,29 @@ jobs:
             console.log('Synced version ' + pkg.version + ' to app.json');
           "
 
-      - name: Commit & Push Version Change
+      - name: Commit & Push Version Change (with Race Condition Protection)
         run: |
           NEW_VERSION=$(node -p "require('./package.json').version")
-          git add package.json app.json
-          git commit -m "chore(release): bump version to v$NEW_VERSION"
-          git push origin master
+          
+          # Only commit if files changed
+          if ! git diff --quiet package.json app.json; then
+            git add package.json app.json
+            git commit -m "chore(release): bump version to v$NEW_VERSION"
+            git pull --rebase origin master
+            git push origin master
+          else
+            echo "No version changes to commit."
+          fi
 
       - name: Create & Push Tag
         run: |
           NEW_VERSION=$(node -p "require('./package.json').version")
-          git tag "v$NEW_VERSION"
-          git push origin "v$NEW_VERSION"
+          TAG_NAME="v$NEW_VERSION"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists, skipping."
+          else
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+          fi

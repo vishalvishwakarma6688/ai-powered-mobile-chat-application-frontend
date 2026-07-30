@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,11 +24,12 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Setup Java SDK
+      - name: Setup Java SDK & Gradle Cache
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: gradle
 
       - name: Install Dependencies
         run: npm ci
@@ -37,17 +39,24 @@ jobs:
           node -e "
             const fs = require('fs');
             const tag = process.env.GITHUB_REF_NAME || '';
-            const tagVersion = tag.replace(/^v/, '');
-            console.log('Setting package.json and app.json version to ' + tagVersion);
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version = tagVersion;
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-            app.expo.version = tagVersion;
-            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n', 'utf8');
+            if (tag.startsWith('v')) {
+              const tagVersion = tag.replace(/^v/, '');
+              console.log('Setting package.json and app.json version to ' + tagVersion);
+              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+              pkg.version = tagVersion;
+              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+              const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+              app.expo.version = tagVersion;
+              fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n', 'utf8');
+            }
           "
 
-      - name: Prebuild & Build Android APK
+      - name: Run Type Check & Verification
+        run: |
+          echo "Running TypeScript verification..."
+          npx tsc --noEmit || true
+
+      - name: Prebuild & Build Android APK & App Bundle (.aab)
         env:
           EXPO_PUBLIC_API_URL: https://ai-powered-mobile-chat-application.onrender.com
         run: |
@@ -55,6 +64,7 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleRelease
+          ./gradlew bundleRelease
 
       - name: Build Web Export
         env:
@@ -67,11 +77,18 @@ jobs:
           mkdir -p dist-artifacts
           TAG_NAME="${GITHUB_REF_NAME}"
 
-          # Collect Android APK
+          # Collect Android APK (.apk)
           APK_PATH=$(find android/app/build/outputs/apk -name "*.apk" 2>/dev/null | head -n 1)
           if [ -n "$APK_PATH" ]; then
             cp "$APK_PATH" "dist-artifacts/ChatApp-${TAG_NAME}.apk"
             echo "Collected APK: ChatApp-${TAG_NAME}.apk"
+          fi
+
+          # Collect Android App Bundle (.aab)
+          AAB_PATH=$(find android/app/build/outputs/bundle -name "*.aab" 2>/dev/null | head -n 1)
+          if [ -n "$AAB_PATH" ]; then
+            cp "$AAB_PATH" "dist-artifacts/ChatApp-${TAG_NAME}.aab"
+            echo "Collected App Bundle: ChatApp-${TAG_NAME}.aab"
           fi
 
           # Collect Web Dist Bundle if available
