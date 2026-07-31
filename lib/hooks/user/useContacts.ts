@@ -31,11 +31,11 @@ export const useAddContact = (
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: addContactApi,
-        onSuccess: (data, variables, context) => {
+        onSuccess: (data, variables, onMutateResult, context) => {
             // Invalidate contacts query to refresh user's contact list
             queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
             if (options?.onSuccess) {
-                options.onSuccess(data, variables, context);
+                options.onSuccess(data, variables, onMutateResult, context);
             }
         },
         ...options,
@@ -51,11 +51,11 @@ export const useRemoveContact = (
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: removeContactApi,
-        onSuccess: (data, variables, context) => {
+        onSuccess: (data, variables, onMutateResult, context) => {
             // Invalidate contacts query to refresh user's contact list
             queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
             if (options?.onSuccess) {
-                options.onSuccess(data, variables, context);
+                options.onSuccess(data, variables, onMutateResult, context);
             }
         },
         ...options,

@@ -7,11 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useSocket } from '../../lib/socket/socketContext';
 import { useCallStore, CallRole, CallType } from '../../lib/store/callStore';
 import { useEndCall } from '../../lib/hooks/call';
-
-const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+import { getIceServers, IceServer } from '../../lib/config/webrtc.config';
 
 type WebRTCModule = {
-    RTCPeerConnection: new (config: { iceServers: Array<{ urls: string }> }) => any;
+    RTCPeerConnection: new (config: { iceServers: IceServer[] }) => any;
     RTCIceCandidate: new (candidate: any) => any;
     RTCSessionDescription: new (description: any) => any;
     RTCView: ComponentType<any>;
@@ -161,7 +160,7 @@ export default function ActiveCallScreen() {
         if (!webrtc || !RTCSessionDescription) return null;
         if (peerConnectionRef.current) return peerConnectionRef.current;
 
-        const pc = new webrtc.RTCPeerConnection({ iceServers: ICE_SERVERS });
+        const pc = new webrtc.RTCPeerConnection({ iceServers: getIceServers() });
 
         pc.onicecandidate = (event: any) => {
             if (event.candidate && socket && peerId) {
