@@ -86,10 +86,14 @@ export default function RootLayout() {
 
   useEffect(() => {
     const init = async () => {
-      // Put any real startup work here (load fonts, check auth token, etc.)
-      await new Promise((r) => setTimeout(r, 1800));
-      await SplashScreen.hideAsync();
-      setReady(true);
+      try {
+        // Hide splash screen smoothly when app resources and layout are loaded
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.warn('Splash screen hide error:', e);
+      } finally {
+        setReady(true);
+      }
     };
     init();
   }, []);

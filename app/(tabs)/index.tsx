@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useChats } from '../../lib/hooks/chat/useChats';
 import { useAuthStore } from '../../lib/store/authStore';
 import { useSocket } from '../../lib/socket/socketContext';
@@ -16,6 +16,20 @@ export default function ChatsScreen() {
   const { isConnected } = useSocket();
   const [showMenu, setShowMenu] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showConnectingBanner, setShowConnectingBanner] = useState(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (!isConnected) {
+      // Delay showing "Connecting to server..." by 3.5 seconds to prevent startup banner flash
+      timer = setTimeout(() => {
+        setShowConnectingBanner(true);
+      }, 3500);
+    } else {
+      setShowConnectingBanner(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isConnected]);
 
   // Fetch chats
   const { data, isLoading, error, refetch, isRefetching } = useChats();
@@ -95,7 +109,7 @@ export default function ChatsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#0F172A]" style={{ backgroundColor: '#0F172A' }}>
       {/* Network Status Banner */}
-      {!isConnected && (
+      {!isConnected && showConnectingBanner && (
         <View className="bg-amber-600/90 py-1.5 px-4 flex-row items-center justify-center" style={{ backgroundColor: '#D97706' }}>
           <Ionicons name="warning-outline" size={14} color="#fff" style={{ marginRight: 6 }} />
           <Text className="text-white text-xs font-semibold">
