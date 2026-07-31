@@ -4,6 +4,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
 import { Ionicons } from '@expo/vector-icons';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/api/queryClient';
@@ -87,11 +88,24 @@ export default function RootLayout() {
   useEffect(() => {
     const init = async () => {
       try {
-        // Hide splash screen smoothly when app resources and layout are loaded
-        await SplashScreen.hideAsync();
+        // Check for Over-The-Air (OTA) updates in standalone builds
+        if (!__DEV__) {
+          const update = await Updates.checkForUpdateAsync();
+          if (update.isAvailable) {
+            console.log('🔄 New OTA update found! Downloading...');
+            await Updates.fetchUpdateAsync();
+            await Updates.reloadAsync();
+            return;
+          }
+        }
       } catch (e) {
-        console.warn('Splash screen hide error:', e);
+        console.log('ℹ️ OTA update check skipped:', e);
       } finally {
+        try {
+          await SplashScreen.hideAsync();
+        } catch (e) {
+          console.warn('Splash screen hide error:', e);
+        }
         setReady(true);
       }
     };
