@@ -56,7 +56,7 @@ export const useUploadAndSendDocument = (
             });
 
             // Call external success handler
-            options?.onSuccess?.(data, variables, context);
+            (options as any)?.onSuccess?.(data, variables, context);
         },
 
         onError: options?.onError,

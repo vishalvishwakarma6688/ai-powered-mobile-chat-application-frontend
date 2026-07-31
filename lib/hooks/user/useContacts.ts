@@ -35,7 +35,7 @@ export const useAddContact = (
             // Invalidate contacts query to refresh user's contact list
             queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
             if (options?.onSuccess) {
-                options.onSuccess(data, variables, onMutateResult, context);
+                (options.onSuccess as any)(data, variables, onMutateResult, context);
             }
         },
         ...options,
@@ -55,7 +55,7 @@ export const useRemoveContact = (
             // Invalidate contacts query to refresh user's contact list
             queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
             if (options?.onSuccess) {
-                options.onSuccess(data, variables, onMutateResult, context);
+                (options.onSuccess as any)(data, variables, onMutateResult, context);
             }
         },
         ...options,

@@ -88,10 +88,10 @@ export const useSendMessage = (options?: {
         },
         onError: (error, variables, context) => {
             // Rollback to previous state on error
-            if (context?.previousMessages) {
+            if ((context as any)?.previousMessages) {
                 queryClient.setQueryData(
                     ['messages', variables.chatId, 1],
-                    context.previousMessages
+                    (context as any).previousMessages
                 );
             }
 

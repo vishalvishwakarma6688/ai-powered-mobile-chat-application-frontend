@@ -33,7 +33,7 @@ export default function SearchInGroupDialog({ visible, onClose, chatId }: Search
                     return true;
                 }
                 // Search in file names
-                if (msg.type === 'file' && msg.fileName?.toLowerCase().includes(query)) {
+                if (msg.type === 'file' && (msg as any).fileName?.toLowerCase().includes(query)) {
                     return true;
                 }
                 // Search in sender name

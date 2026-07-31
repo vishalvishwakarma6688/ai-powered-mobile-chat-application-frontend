@@ -15,7 +15,7 @@ export default function VoiceRecorder({ onSend, onCancel }: VoiceRecorderProps) 
     const [isRecording, setIsRecording] = useState(false);
     const slideAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(1)).current;
-    const durationInterval = useRef<NodeJS.Timeout | null>(null);
+    const durationInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Pan responder for swipe to cancel
     const panResponder = useRef(

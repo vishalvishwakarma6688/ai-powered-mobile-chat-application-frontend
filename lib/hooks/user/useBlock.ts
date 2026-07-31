@@ -14,7 +14,7 @@ export const useBlockUser = (options?: UseMutationOptions<BlockResponse, Error, 
             queryClient.invalidateQueries({ queryKey: ['blockedUsers'] });
             // Invalidate chats to update UI
             queryClient.invalidateQueries({ queryKey: ['chats'] });
-            options?.onSuccess?.(data, variables, context);
+            (options as any)?.onSuccess?.(data, variables, context);
         },
         onError: options?.onError,
     });
@@ -33,7 +33,7 @@ export const useUnblockUser = (options?: UseMutationOptions<BlockResponse, Error
             queryClient.invalidateQueries({ queryKey: ['blockedUsers'] });
             // Invalidate chats to update UI
             queryClient.invalidateQueries({ queryKey: ['chats'] });
-            options?.onSuccess?.(data, variables, context);
+            (options as any)?.onSuccess?.(data, variables, context);
         },
         onError: options?.onError,
     });

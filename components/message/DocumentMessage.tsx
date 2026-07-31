@@ -80,7 +80,7 @@ export default function DocumentMessage({
             console.log('📄 Downloading document:', fullUrl);
 
             // Download the file
-            const fileUri = FileSystem.documentDirectory + fileName;
+            const fileUri = (FileSystem as any).documentDirectory + fileName;
             const downloadResult = await FileSystem.downloadAsync(fullUrl, fileUri);
 
             console.log('✅ Document downloaded:', downloadResult.uri);

@@ -2,6 +2,8 @@ import { apiClient } from '../client';
 import { ENDPOINTS } from '../../constants/endpoints';
 import { CallType, CallUserRef } from '../../store/callStore';
 
+export type { CallUserRef };
+
 export interface CallParticipant {
     userId: CallUserRef | string;
     status: 'ringing' | 'accepted' | 'rejected' | 'missed';

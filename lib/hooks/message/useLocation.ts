@@ -29,7 +29,7 @@ export const useSendLocation = (
             queryClient.invalidateQueries({ queryKey: ['messages', variables.chatId] });
             queryClient.invalidateQueries({ queryKey: ['chats'] });
 
-            options?.onSuccess?.(data, variables, undefined);
+            (options as any)?.onSuccess?.(data, variables);
         },
         onError: options?.onError,
     });

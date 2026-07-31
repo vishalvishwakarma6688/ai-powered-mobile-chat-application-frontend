@@ -35,7 +35,7 @@ export default function VoiceNotePlayer({
     const [isPlaying, setIsPlaying] = useState(false);
     const [position, setPosition] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
-    const positionInterval = useRef<NodeJS.Timeout | null>(null);
+    const positionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Debug log to check received data
     useEffect(() => {

@@ -40,7 +40,7 @@ export default function SearchMessagesDialog({
                 results: data?.data?.map(m => ({
                     id: m._id,
                     text: m.text?.substring(0, 50),
-                    isEncrypted: m.isEncrypted
+                    isEncrypted: (m as any).isEncrypted
                 }))
             });
         }
@@ -59,32 +59,29 @@ export default function SearchMessagesDialog({
         // TODO: Scroll to specific message (would need additional implementation)
     };
 
-    const formatTimestamp = (dateString: string) => {
+    const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffDays = Math.floor(diffMs / 86400000);
+        const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) {
-            const hours = date.getHours();
-            const minutes = date.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const formattedHours = hours % 12 || 12;
-            const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-            return `${formattedHours}:${formattedMinutes} ${ampm}`;
+        if (diffInDays === 0) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) {
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        if (diffInDays === 1) {
+            return 'Yesterday';
+        }
+
+        if (diffInDays < 7) {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             return days[date.getDay()];
         }
 
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
-    const highlightText = (text: string, query: string) => {
-        if (!query.trim()) return text;
+    const highlightText = (text: string, query: string): string[] => {
+        if (!query.trim()) return [text];
 
         const parts = text.split(new RegExp(`(${query})`, 'gi'));
         return parts;
@@ -93,7 +90,7 @@ export default function SearchMessagesDialog({
     const getChatName = (message: Message) => {
         // For now, we'll use the chat ID or sender name
         // In a real app, you'd fetch chat details
-        return message.chatId?.name || message.sender?.username || 'Unknown Chat';
+        return (message.chatId as any)?.name || message.sender?.username || 'Unknown Chat';
     };
 
     return (
@@ -195,7 +192,7 @@ export default function SearchMessagesDialog({
                                                 {getChatName(message)}
                                             </Text>
                                             <Text className="text-slate-500 text-xs">
-                                                {formatTimestamp(message.createdAt)}
+                                                {formatDate(message.createdAt)}
                                             </Text>
                                         </View>
 

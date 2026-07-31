@@ -13,7 +13,7 @@ export const useSetAutoDelete = (options?: UseMutationOptions<SetAutoDeleteRespo
         onSuccess: (data, variables, context) => {
             // Invalidate messages query to refresh
             queryClient.invalidateQueries({ queryKey: ['messages'] });
-            options?.onSuccess?.(data, variables, context);
+            (options as any)?.onSuccess?.(data, variables, context);
         },
         onError: options?.onError,
     });
@@ -30,7 +30,7 @@ export const useCancelAutoDelete = (options?: UseMutationOptions<SetAutoDeleteRe
         onSuccess: (data, variables, context) => {
             // Invalidate messages query to refresh
             queryClient.invalidateQueries({ queryKey: ['messages'] });
-            options?.onSuccess?.(data, variables, context);
+            (options as any)?.onSuccess?.(data, variables, context);
         },
         onError: options?.onError,
     });

@@ -36,7 +36,7 @@ export const useSendContact = (
                 }
             );
 
-            options?.onSuccess?.(data, variables, undefined);
+            (options as any)?.onSuccess?.(data, variables);
         },
         onError: options?.onError,
     });
