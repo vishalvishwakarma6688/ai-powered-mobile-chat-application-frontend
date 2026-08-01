@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../lib/store/authStore';
-import { useCallHistory } from '../../lib/hooks/call/useCall';
+import { useCallHistory, useInitiateCall } from '../../lib/hooks/call/useCall';
 import { CallRecord, CallUserRef } from '../../lib/api/call/callApi';
+import { useCallStore } from '../../lib/store/callStore';
+import CallDetailsModal from '../../components/call/CallDetailsModal';
 
 const PAGE_SIZE = 20;
 
@@ -89,7 +91,7 @@ function getCallMeta(call: CallRecord, currentUserId: string) {
         } else if (accepted) {
             status = 'Completed';
         } else if (rejected) {
-            status = 'Missed';
+            status = 'Declined';
         } else {
             status = 'Missed';
         }
@@ -118,9 +120,13 @@ function getCallMeta(call: CallRecord, currentUserId: string) {
 function CallItem({
     call,
     currentUserId,
+    onPressItem,
+    onQuickCall,
 }: {
     call: CallRecord;
     currentUserId: string;
+    onPressItem: (call: CallRecord) => void;
+    onQuickCall: (targetUserId: string, targetUserName: string, targetUserProfilePic: string | null, type: 'audio' | 'video', chatId?: string) => void;
 }) {
     const meta = getCallMeta(call, currentUserId);
     const displayName = meta.chatName || meta.otherUser?.username || meta.caller?.username || 'Unknown';
@@ -129,6 +135,8 @@ function CallItem({
     const timeLabel = formatTime(call.createdAt);
     const duration = formatDuration(call.startTime, call.endTime);
     const isVideo = call.type === 'video';
+    const targetUserId = meta.otherUser?._id || meta.caller?._id || '';
+    const rawChatId = typeof call.chatId === 'object' ? call.chatId?._id : (call.chatId || undefined);
 
     const statusColor =
         meta.status === 'Completed' || meta.status === 'Connected'
@@ -141,17 +149,17 @@ function CallItem({
 
     const directionIcon =
         meta.direction === 'Outgoing'
-            ? 'arrow-up-right'
-            : meta.direction === 'Incoming'
-                ? 'arrow-down-left'
-                : 'call-outline';
+            ? 'arrow-up'
+            : 'arrow-down';
 
     return (
         <TouchableOpacity
-            activeOpacity={0.85}
-            className="px-6 py-4 border-b border-slate-800 flex-row items-center"
+            activeOpacity={0.7}
+            className="px-6 py-4 border-b border-slate-800/60 flex-row items-center bg-[#0F172A]"
+            onPress={() => onPressItem(call)}
         >
-            <View className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden items-center justify-center">
+            {/* Profile Avatar */}
+            <View className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden items-center justify-center border border-slate-700">
                 {profilePic ? (
                     <Image source={{ uri: profilePic }} className="w-full h-full" resizeMode="cover" />
                 ) : (
@@ -159,6 +167,7 @@ function CallItem({
                 )}
             </View>
 
+            {/* Call Info */}
             <View className="flex-1 ml-4">
                 <View className="flex-row items-center justify-between">
                     <Text className="text-white text-base font-semibold" numberOfLines={1}>
@@ -171,18 +180,27 @@ function CallItem({
 
                 <View className="flex-row items-center mt-1">
                     <Ionicons name={directionIcon as any} size={14} color={statusColor} />
-                    <Text className="text-slate-400 text-sm ml-1" numberOfLines={1}>
+                    <Text className="text-slate-400 text-sm ml-1.5" numberOfLines={1}>
                         {meta.direction} {isVideo ? 'video' : 'voice'} call
-                        {duration ? ` - ${duration}` : ''}
+                        {duration ? ` • ${duration}` : ''}
                     </Text>
                 </View>
             </View>
 
-            <View className="items-end ml-3">
-                <Text className="text-xs font-semibold" style={{ color: statusColor }}>
+            {/* Status & Quick Action Button */}
+            <View className="flex-row items-center ml-3">
+                <Text className="text-xs font-semibold mr-3" style={{ color: statusColor }}>
                     {meta.status}
                 </Text>
-                <Ionicons name="time-outline" size={18} color="#64748b" style={{ marginTop: 6 }} />
+                <TouchableOpacity
+                    className="w-10 h-10 rounded-full bg-slate-800/90 border border-slate-700 items-center justify-center"
+                    onPress={(e) => {
+                        e.stopPropagation();
+                        onQuickCall(targetUserId, displayName, profilePic, isVideo ? 'video' : 'audio', rawChatId);
+                    }}
+                >
+                    <Ionicons name={isVideo ? 'videocam' : 'call'} size={18} color="#6C5CE7" />
+                </TouchableOpacity>
             </View>
         </TouchableOpacity>
     );
@@ -193,7 +211,11 @@ export default function CallsScreen() {
     const currentUserId = user?._id || '';
     const [page, setPage] = useState(1);
     const [calls, setCalls] = useState<CallRecord[]>([]);
+    const [selectedCall, setSelectedCall] = useState<CallRecord | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+
     const { data, isLoading, error, isFetching, refetch } = useCallHistory(page, PAGE_SIZE);
+    const initiateCallMutation = useInitiateCall();
 
     const totalPages = data?.pagination.pages ?? data?.pagination.totalPages ?? 1;
     const hasMore = page < totalPages;
@@ -230,10 +252,56 @@ export default function CallsScreen() {
         setPage((prev) => prev + 1);
     };
 
+    const handleCallAgain = async (
+        targetUserId: string,
+        targetUserName: string,
+        targetUserProfilePic: string | null,
+        type: 'audio' | 'video',
+        chatId?: string
+    ) => {
+        if (!targetUserId) return;
+
+        try {
+            const response = await initiateCallMutation.mutateAsync({
+                participantIds: [targetUserId],
+                type,
+                chatId,
+            });
+
+            useCallStore.getState().setActiveCall({
+                callId: response.data._id,
+                role: 'caller',
+                type,
+                peerId: targetUserId,
+                peerName: targetUserName,
+                peerProfilePic: targetUserProfilePic,
+                chatId: chatId || '',
+                status: 'ringing',
+            });
+
+            router.push(`/call/${response.data._id}`);
+        } catch (err) {
+            console.error('❌ Failed to initiate call:', err);
+        }
+    };
+
+    const handleOpenChat = (chatId?: string) => {
+        if (chatId) {
+            router.push(`/chat/${chatId}`);
+        } else {
+            router.push('/');
+        }
+    };
+
+    const handlePressItem = (call: CallRecord) => {
+        setSelectedCall(call);
+        setShowDetailsModal(true);
+    };
+
     const emptyState = useMemo(
         () => (
             <View className="flex-1 items-center justify-center px-6 py-20">
-                <View className="w-24 h-24 rounded-full bg-slate-800 items-center justify-center mb-6">
+                <View className="w-24 h-24 rounded-full bg-slate-800 items-center justify-center mb-6 border border-slate-700">
                     <Ionicons name="call-outline" size={48} color="#6C5CE7" />
                 </View>
                 <Text className="text-white text-xl font-semibold mb-2">
@@ -276,7 +344,14 @@ export default function CallsScreen() {
                 <FlatList
                     data={calls}
                     keyExtractor={(item) => item._id}
-                    renderItem={({ item }) => <CallItem call={item} currentUserId={currentUserId} />}
+                    renderItem={({ item }) => (
+                        <CallItem
+                            call={item}
+                            currentUserId={currentUserId}
+                            onPressItem={handlePressItem}
+                            onQuickCall={handleCallAgain}
+                        />
+                    )}
                     contentContainerStyle={calls.length === 0 ? { flexGrow: 1 } : { paddingBottom: 24 }}
                     ListEmptyComponent={
                         isLoading ? (
@@ -305,6 +380,16 @@ export default function CallsScreen() {
                     }
                 />
             )}
+
+            {/* Call Details Modal */}
+            <CallDetailsModal
+                visible={showDetailsModal}
+                call={selectedCall}
+                currentUserId={currentUserId}
+                onClose={() => setShowDetailsModal(false)}
+                onCallAgain={handleCallAgain}
+                onOpenChat={handleOpenChat}
+            />
         </SafeAreaView>
     );
 }
