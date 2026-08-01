@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import CustomAlert from '../../components/common/CustomAlert';
+import OTADebugModal from '../../components/common/OTADebugModal';
 
 export default function AboutScreen() {
+    const [showDebugModal, setShowDebugModal] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         visible: boolean;
         title: string;
@@ -78,7 +80,7 @@ export default function AboutScreen() {
                     ChatApp
                 </Text>
                 <Text className="text-slate-500 text-sm mt-1">
-                    Version 1.0.0 (Build 26)
+                    Version 1.0.14
                 </Text>
                 <Text className="text-slate-400 text-center px-8 text-sm mt-4 leading-6">
                     A next-generation real-time mobile messaging application built with React Native, Expo, and WebSockets.
@@ -87,6 +89,12 @@ export default function AboutScreen() {
                 {/* Info List Section */}
                 <View className="w-full px-6 mt-10">
                     <View className="bg-[#1E293B] border border-slate-800 rounded-2xl overflow-hidden">
+                        {renderAboutRow(
+                            'refresh-circle-outline',
+                            '#6C5CE7',
+                            'Check Updates & Diagnostics',
+                            () => setShowDebugModal(true)
+                        )}
                         {renderAboutRow(
                             'document-text-outline',
                             '#3B82F6',
@@ -130,6 +138,12 @@ export default function AboutScreen() {
                     </Text>
                 </View>
             </ScrollView>
+
+            {/* OTA Debug Modal */}
+            <OTADebugModal
+                visible={showDebugModal}
+                onClose={() => setShowDebugModal(false)}
+            />
 
             {/* Custom Dialog Alert */}
             <CustomAlert
