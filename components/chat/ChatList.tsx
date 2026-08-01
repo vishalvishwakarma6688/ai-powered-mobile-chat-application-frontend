@@ -1,7 +1,5 @@
 import { View, Text, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
 import ChatListItem from './ChatListItem';
 import { Chat } from '../../lib/api/chat/chatApi';
 import { useAIChat } from '../../lib/hooks/ai/useAIChat';
@@ -24,18 +22,20 @@ export default function ChatList({
     isRefreshing,
 }: ChatListProps) {
     // Get or create AI chat
-    const { data: aiChatData, isLoading: isAIChatLoading } = useAIChat();
+    const { data: aiChatData } = useAIChat();
 
     // Filter out AI chat from regular chats to avoid duplicates
     const AI_BOT_ID = '000000000000000000000001';
     const regularChats = chats.filter(chat => {
-        // Check if this chat includes the AI bot as a participant
         const hasAIBot = chat.participants?.some(p => p.userId?._id === AI_BOT_ID);
         return !hasAIBot;
     });
 
-    // Loading state
-    if (isLoading && !isRefreshing) {
+    // Combine AI chat with regular chats (AI chat always at top)
+    const allChats = aiChatData?.data ? [aiChatData.data, ...regularChats] : regularChats;
+
+    // Loading state (only show spinner on initial load if we have 0 cached chats)
+    if (isLoading && !isRefreshing && allChats.length === 0) {
         return (
             <View className="flex-1 items-center justify-center">
                 <ActivityIndicator size="large" color="#6C5CE7" />
@@ -44,8 +44,8 @@ export default function ChatList({
         );
     }
 
-    // Error state
-    if (error) {
+    // Error state (only show full screen error if no cached chats exist at all)
+    if (error && allChats.length === 0) {
         return (
             <View className="flex-1 items-center justify-center px-6">
                 <View className="w-16 h-16 rounded-full bg-red-500/20 items-center justify-center mb-4">
@@ -70,9 +70,6 @@ export default function ChatList({
         );
     }
 
-    // Combine AI chat with regular chats (AI chat always at top)
-    const allChats = aiChatData?.data ? [aiChatData.data, ...regularChats] : regularChats;
-
     // Empty state (only show if no AI chat and no regular chats)
     if (allChats.length === 0) {
         return (
@@ -91,7 +88,7 @@ export default function ChatList({
         );
     }
 
-    // Chat list
+    // Chat list (renders cached chats instantly and maintains list even on refetch error)
     return (
         <FlatList
             data={allChats}

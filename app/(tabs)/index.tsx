@@ -108,16 +108,6 @@ export default function ChatsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#0F172A]" style={{ backgroundColor: '#0F172A' }}>
-      {/* Network Status Banner */}
-      {!isConnected && showConnectingBanner && (
-        <View className="bg-amber-600/90 py-1.5 px-4 flex-row items-center justify-center" style={{ backgroundColor: '#D97706' }}>
-          <Ionicons name="cloud-offline-outline" size={14} color="#fff" style={{ marginRight: 6 }} />
-          <Text className="text-white text-xs font-semibold">
-            Offline - Showing cached chats
-          </Text>
-        </View>
-      )}
-
       {/* Header */}
       <View className="px-6 py-4 border-b border-slate-800 flex-row items-center justify-between">
         <View className="flex-row items-center">

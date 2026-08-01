@@ -1,18 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { getUserChats } from '../../api/chat/chatApi';
+import { dbSaveChats } from '../../db/database';
 
 /**
- * Hook to fetch user's chats
- * Real-time updates handled by Socket.IO, not polling
+ * Hook to fetch user's chats with WhatsApp-style instant local storage & SQLite background sync.
  */
 export const useChats = (page: number = 1, limit: number = 20, enabled: boolean = true) => {
     return useQuery({
         queryKey: ['chats', page, limit],
-        queryFn: () => getUserChats(page, limit),
-        staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer since Socket.IO handles updates
-        enabled, // Allow disabling the query
-        retry: 2, // Retry failed requests twice
-        retryDelay: 1000, // Wait 1 second between retries
-        // NO refetchInterval - Socket.IO will handle real-time updates
+        queryFn: async () => {
+            const response = await getUserChats(page, limit);
+            if (response?.data) {
+                dbSaveChats(response.data);
+            }
+            return response;
+        },
+        staleTime: 5 * 60 * 1000,
+        enabled,
+        retry: 2,
+        retryDelay: 1000,
+        networkMode: 'offlineFirst',
     });
 };

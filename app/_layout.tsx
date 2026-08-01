@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, AppState } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { queryClient } from '../lib/api/queryClient';
 import { asyncStoragePersister } from '../lib/api/queryPersister';
 import { useAuthStore } from '../lib/store/authStore';
 import { SocketProvider } from '../lib/socket/socketContext';
+import { initDatabase } from '../lib/db/database';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -23,7 +24,8 @@ function RootLayoutContent() {
   const { isAuthenticated, isLoading, loadAuth } = useAuthStore();
 
   useEffect(() => {
-    // Load authentication state from storage
+    // Initialize SQLite database & load authentication state
+    initDatabase();
     loadAuth();
   }, []);
 
@@ -86,21 +88,27 @@ function RootLayoutContent() {
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
+  // Helper to check & apply OTA updates safely
+  const checkAndApplyUpdate = async () => {
+    try {
+      if (__DEV__ || !Updates.isEnabled) return;
+      console.log('🔍 Checking for OTA updates...');
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        console.log('🔄 New OTA update found! Downloading...');
+        await Updates.fetchUpdateAsync();
+        console.log('✅ OTA update downloaded! Reloading app...');
+        await Updates.reloadAsync();
+      }
+    } catch (e: any) {
+      console.log('ℹ️ OTA update check status:', e?.message || e);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
-        // Check for Over-The-Air (OTA) updates in standalone builds
-        if (!__DEV__) {
-          const update = await Updates.checkForUpdateAsync();
-          if (update.isAvailable) {
-            console.log('🔄 New OTA update found! Downloading...');
-            await Updates.fetchUpdateAsync();
-            await Updates.reloadAsync();
-            return;
-          }
-        }
-      } catch (e) {
-        console.log('ℹ️ OTA update check skipped:', e);
+        await checkAndApplyUpdate();
       } finally {
         try {
           await SplashScreen.hideAsync();
@@ -111,6 +119,23 @@ export default function RootLayout() {
       }
     };
     init();
+
+    // Check again 5 seconds after startup (once network is fully established)
+    const delayedCheck = setTimeout(() => {
+      checkAndApplyUpdate();
+    }, 5000);
+
+    // Check whenever app resumes to foreground
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkAndApplyUpdate();
+      }
+    });
+
+    return () => {
+      clearTimeout(delayedCheck);
+      subscription.remove();
+    };
   }, []);
 
   // In-app splash — rendered before the Stack mounts, same dark bg as every screen

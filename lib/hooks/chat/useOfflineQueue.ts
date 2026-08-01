@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSocket } from '../../socket/socketContext';
 import { sendTextMessageApi } from '../../api/message/messageApi';
 import { queryClient } from '../../api/queryClient';
+import { dbQueueOutbox, dbGetOutbox, dbClearOutboxItem } from '../../db/database';
 
 const PENDING_QUEUE_KEY = '@OFFLINE_PENDING_MESSAGES';
 
@@ -19,9 +20,22 @@ export const useOfflineQueue = () => {
     const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
     const [isSyncing, setIsSyncing] = useState(false);
 
-    // Load queued messages from AsyncStorage
+    // Load queued messages from SQLite (and AsyncStorage fallback)
     const loadQueue = useCallback(async () => {
         try {
+            const sqliteRows = dbGetOutbox();
+            if (sqliteRows && sqliteRows.length > 0) {
+                const mapped: PendingMessage[] = sqliteRows.map((r: any) => ({
+                    id: r.id,
+                    chatId: r.chat_id,
+                    text: r.text,
+                    createdAt: r.created_at,
+                    type: r.type || 'text',
+                }));
+                setPendingMessages(mapped);
+                return;
+            }
+
             const raw = await AsyncStorage.getItem(PENDING_QUEUE_KEY);
             if (raw) {
                 const parsed: PendingMessage[] = JSON.parse(raw);
@@ -36,9 +50,11 @@ export const useOfflineQueue = () => {
         loadQueue();
     }, [loadQueue]);
 
-    // Queue a message for offline sending
+    // Queue a message for offline sending in SQLite & AsyncStorage
     const queueMessage = useCallback(async (msg: PendingMessage) => {
         try {
+            dbQueueOutbox(msg.id, msg.chatId, msg.text, msg.type);
+
             const raw = await AsyncStorage.getItem(PENDING_QUEUE_KEY);
             const current: PendingMessage[] = raw ? JSON.parse(raw) : [];
             const updated = [...current, msg];
@@ -54,10 +70,22 @@ export const useOfflineQueue = () => {
         if (!isConnected || isSyncing) return;
 
         try {
-            const raw = await AsyncStorage.getItem(PENDING_QUEUE_KEY);
-            if (!raw) return;
+            const sqliteRows = dbGetOutbox();
+            let queue: PendingMessage[] = [];
 
-            const queue: PendingMessage[] = JSON.parse(raw);
+            if (sqliteRows && sqliteRows.length > 0) {
+                queue = sqliteRows.map((r: any) => ({
+                    id: r.id,
+                    chatId: r.chat_id,
+                    text: r.text,
+                    createdAt: r.created_at,
+                    type: r.type || 'text',
+                }));
+            } else {
+                const raw = await AsyncStorage.getItem(PENDING_QUEUE_KEY);
+                if (raw) queue = JSON.parse(raw);
+            }
+
             if (queue.length === 0) return;
 
             setIsSyncing(true);
@@ -71,6 +99,7 @@ export const useOfflineQueue = () => {
                         chatId: item.chatId,
                         text: item.text,
                     });
+                    dbClearOutboxItem(item.id);
                     console.log(`✅ [OFFLINE QUEUE] Synced message ${item.id}`);
                 } catch (err) {
                     console.error(`❌ [OFFLINE QUEUE] Failed to sync message ${item.id}:`, err);
@@ -81,7 +110,6 @@ export const useOfflineQueue = () => {
             await AsyncStorage.setItem(PENDING_QUEUE_KEY, JSON.stringify(remaining));
             setPendingMessages(remaining);
 
-            // Invalidate queries so fresh server data reflects instantly
             queryClient.invalidateQueries({ queryKey: ['messages'] });
             queryClient.invalidateQueries({ queryKey: ['chats'] });
         } catch (e) {

@@ -77,7 +77,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location to share it in chats."
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -86,8 +87,9 @@
     "updates": {
       "enabled": true,
       "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 1000,
-      "url": "https://u.expo.dev/c55e8979-9115-478f-8b5a-f9e53727a33d"
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/c55e8979-9115-478f-8b5a-f9e53727a33d",
+      "channel": "production"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
