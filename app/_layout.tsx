@@ -6,8 +6,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import { Ionicons } from '@expo/vector-icons';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { queryClient } from '../lib/api/queryClient';
+import { asyncStoragePersister } from '../lib/api/queryPersister';
 import { useAuthStore } from '../lib/store/authStore';
 import { SocketProvider } from '../lib/socket/socketContext';
 import '../global.css';
@@ -130,11 +131,14 @@ export default function RootLayout() {
     <View style={styles.root}>
       <StatusBar style="light" backgroundColor={BG} translucent={false} />
       <SafeAreaProvider style={styles.root}>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: asyncStoragePersister }}
+        >
           <SocketProvider>
             <RootLayoutContent />
           </SocketProvider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </SafeAreaProvider>
     </View>
   );

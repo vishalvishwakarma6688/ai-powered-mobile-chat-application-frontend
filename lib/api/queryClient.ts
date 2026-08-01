@@ -1,21 +1,23 @@
 import { QueryClient } from '@tanstack/react-query';
 
 /**
- * Shared QueryClient instance.
- * Import this wherever you need direct cache access outside of hooks.
+ * Shared QueryClient instance configured for WhatsApp-style offline capability & instant load times.
+ * - networkMode: 'offlineFirst' -> returns cached disk data immediately when offline or online.
+ * - gcTime: 7 days -> keeps stored chats/messages in local device disk cache across app restarts.
+ * - staleTime: 5 minutes -> reduces redundant network calls while keeping data updated in background.
  */
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Don't refetch on window focus (not relevant in RN, but good to be explicit)
             refetchOnWindowFocus: false,
-            // Retry failed requests once before surfacing the error
             retry: 1,
-            // Data is considered fresh for 30 seconds
-            staleTime: 30 * 1000,
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days (formerly cacheTime)
+            networkMode: 'offlineFirst',
         },
         mutations: {
             retry: 0,
+            networkMode: 'offlineFirst',
         },
     },
 });

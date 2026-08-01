@@ -111,9 +111,9 @@ export default function ChatsScreen() {
       {/* Network Status Banner */}
       {!isConnected && showConnectingBanner && (
         <View className="bg-amber-600/90 py-1.5 px-4 flex-row items-center justify-center" style={{ backgroundColor: '#D97706' }}>
-          <Ionicons name="warning-outline" size={14} color="#fff" style={{ marginRight: 6 }} />
+          <Ionicons name="cloud-offline-outline" size={14} color="#fff" style={{ marginRight: 6 }} />
           <Text className="text-white text-xs font-semibold">
-            Connecting to server...
+            Offline - Showing cached chats
           </Text>
         </View>
       )}
