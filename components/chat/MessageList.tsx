@@ -67,6 +67,9 @@ export default function MessageList({
         return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
     };
 
+    // Messages list - Reverse array to show oldest first
+    const reversedMessages = [...messages].reverse();
+
     // Handle scroll to update sticky date header
     const handleScroll = (event: any) => {
         const offsetY = event.nativeEvent.contentOffset.y;
@@ -75,10 +78,8 @@ export default function MessageList({
         if (offsetY > 100) {
             setShowStickyDate(true);
 
-            // Find the current visible message date
-            // This is a simplified version - you can enhance it based on visible items
             if (reversedMessages.length > 0) {
-                const visibleIndex = Math.floor(offsetY / 100); // Approximate
+                const visibleIndex = Math.floor(offsetY / 100);
                 const visibleMessage = reversedMessages[Math.min(visibleIndex, reversedMessages.length - 1)];
                 if (visibleMessage && (!currentScrollDate || !isSameDay(currentScrollDate, visibleMessage.createdAt))) {
                     setCurrentScrollDate(visibleMessage.createdAt);
@@ -88,7 +89,8 @@ export default function MessageList({
             setShowStickyDate(false);
         }
     };
-    // Loading state - only show if no messages exist yet (initial load)
+
+    // Loading state
     if (isLoading && messages.length === 0) {
         return (
             <View className="flex-1 items-center justify-center">
@@ -98,7 +100,7 @@ export default function MessageList({
         );
     }
 
-    // Error state - only show if no messages exist
+    // Error state
     if (error && messages.length === 0) {
         return (
             <View className="flex-1 items-center justify-center px-6">
@@ -132,9 +134,6 @@ export default function MessageList({
         );
     }
 
-    // Messages list - Reverse array to show oldest first (WhatsApp style)
-    const reversedMessages = [...messages].reverse();
-
     // Create items with date separators
     type ListItem =
         | { type: 'date'; date: string; id: string }
@@ -146,7 +145,6 @@ export default function MessageList({
     reversedMessages.forEach((message) => {
         const messageDate = getDateKey(message.createdAt);
 
-        // Add date separator if it's a new day
         if (messageDate !== lastDate) {
             itemsWithDates.push({
                 type: 'date',
@@ -156,7 +154,6 @@ export default function MessageList({
             lastDate = messageDate;
         }
 
-        // Add message
         itemsWithDates.push({
             type: 'message',
             message,
@@ -177,31 +174,32 @@ export default function MessageList({
                 renderItem={({ item }) => {
                     if (item.type === 'date') {
                         return <DateSeparator date={item.date} />;
-                    } else {
-                        return (
-                            <MessageBubble
-                                message={item.message}
-                                isOwnMessage={item.message.sender._id === currentUserId}
-                                currentUserId={currentUserId}
-                                forceReadStatus={isAIChat}
-                                onReact={onReact}
-                                onRemoveReaction={onRemoveReaction}
-                                onPin={onPin}
-                                onUnpin={onUnpin}
-                                onStar={onStar}
-                                onUnstar={onUnstar}
-                                onDelete={onDelete}
-                                onEdit={onEdit}
-                                onForward={onForward}
-                                onSetAutoDelete={onSetAutoDelete}
-                                onCancelAutoDelete={onCancelAutoDelete}
-                            />
-                        );
                     }
+                    return (
+                        <MessageBubble
+                            message={item.message}
+                            isOwnMessage={item.message.sender._id === currentUserId}
+                            currentUserId={currentUserId}
+                            forceReadStatus={isAIChat}
+                            onReact={onReact}
+                            onRemoveReaction={onRemoveReaction}
+                            onPin={onPin}
+                            onUnpin={onUnpin}
+                            onStar={onStar}
+                            onUnstar={onUnstar}
+                            onDelete={onDelete}
+                            onEdit={onEdit}
+                            onForward={onForward}
+                            onSetAutoDelete={onSetAutoDelete}
+                            onCancelAutoDelete={onCancelAutoDelete}
+                        />
+                    );
                 }}
                 contentContainerStyle={{ paddingTop: 16, paddingBottom: 16 }}
                 inverted={false}
                 showsVerticalScrollIndicator={false}
+                keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
                 refreshControl={

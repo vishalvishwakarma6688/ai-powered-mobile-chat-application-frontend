@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -1295,121 +1295,127 @@ export default function ChatScreen() {
     ];
 
     return (
-        <SafeAreaView className="flex-1 bg-[#0F172A]" style={{ backgroundColor: '#0F172A' }} edges={['top']}>
-            {/* Header */}
-            <View className="px-4 py-3 border-b border-slate-800 flex-row items-center bg-[#0F172A]">
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    className="w-10 h-10 items-center justify-center"
-                >
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
+        <SafeAreaView className="flex-1 bg-[#0F172A]" style={{ backgroundColor: '#0F172A' }} edges={['top', 'bottom']}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            >
+                {/* Header */}
+                <View className="px-4 py-3 border-b border-slate-800 flex-row items-center bg-[#0F172A]">
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        className="w-10 h-10 items-center justify-center"
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                    </TouchableOpacity>
 
-                {/* Chat Info - Tappable for groups */}
-                <TouchableOpacity
-                    className="flex-1 ml-2"
-                    onPress={() => {
-                        if (chatInfo?.isGroup) {
-                            // Navigate to group info
-                            router.push({
-                                pathname: '/(tabs)/group-info',
-                                params: {
-                                    chatId: id,
-                                    chatData: JSON.stringify(chatInfo),
-                                },
-                            });
-                        }
-                    }}
-                    disabled={!chatInfo?.isGroup}
-                >
-                    <View className="flex-row items-center">
-                        <Text className="text-white font-semibold text-lg" numberOfLines={1}>
-                            {displayName}
+                    {/* Chat Info - Tappable for groups */}
+                    <TouchableOpacity
+                        className="flex-1 ml-2"
+                        onPress={() => {
+                            if (chatInfo?.isGroup) {
+                                // Navigate to group info
+                                router.push({
+                                    pathname: '/(tabs)/group-info',
+                                    params: {
+                                        chatId: id,
+                                        chatData: JSON.stringify(chatInfo),
+                                    },
+                                });
+                            }
+                        }}
+                        disabled={!chatInfo?.isGroup}
+                    >
+                        <View className="flex-row items-center">
+                            <Text className="text-white font-semibold text-lg" numberOfLines={1}>
+                                {displayName}
+                            </Text>
+                            {isOnline && (
+                                <View className="w-2 h-2 bg-green-500 rounded-full ml-2" />
+                            )}
+                            {chatInfo?.isGroup && (
+                                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" className="ml-1" />
+                            )}
+                        </View>
+                        <Text className={`text-xs ${isTyping ? 'text-[#6C5CE7]' : 'text-slate-400'}`} numberOfLines={1}>
+                            {statusText}
                         </Text>
-                        {isOnline && (
-                            <View className="w-2 h-2 bg-green-500 rounded-full ml-2" />
-                        )}
-                        {chatInfo?.isGroup && (
-                            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" className="ml-1" />
-                        )}
-                    </View>
-                    <Text className={`text-xs ${isTyping ? 'text-[#6C5CE7]' : 'text-slate-400'}`} numberOfLines={1}>
-                        {statusText}
-                    </Text>
-                </TouchableOpacity>
+                    </TouchableOpacity>
 
-                {showCallActions && (
-                    <View className="flex-row items-center ml-1">
-                        <TouchableOpacity
-                            className="w-10 h-10 items-center justify-center"
-                            onPress={() => handleStartCall('video')}
-                        >
-                            <Ionicons name="videocam-outline" size={22} color="#94A3B8" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            className="w-10 h-10 items-center justify-center"
-                            onPress={() => handleStartCall('audio')}
-                        >
-                            <Ionicons name="call-outline" size={20} color="#94A3B8" />
-                        </TouchableOpacity>
-                    </View>
+                    {showCallActions && (
+                        <View className="flex-row items-center ml-1">
+                            <TouchableOpacity
+                                className="w-10 h-10 items-center justify-center"
+                                onPress={() => handleStartCall('video')}
+                            >
+                                <Ionicons name="videocam-outline" size={22} color="#94A3B8" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                className="w-10 h-10 items-center justify-center"
+                                onPress={() => handleStartCall('audio')}
+                            >
+                                <Ionicons name="call-outline" size={20} color="#94A3B8" />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Options Menu */}
+                    <TouchableOpacity
+                        className="w-10 h-10 items-center justify-center"
+                        onPress={() => setShowOptionsMenu(true)}
+                    >
+                        <Ionicons name="ellipsis-vertical" size={20} color="#94A3B8" />
+                    </TouchableOpacity>
+
+                </View>
+
+                {/* Pinned Message Banner */}
+                {showPinnedBanner && pinnedData?.data && pinnedData.data.length > 0 && (
+                    <PinnedMessageBanner
+                        pinnedMessages={pinnedData.data}
+                        onPressPinned={handlePressPinned}
+                        onClose={() => setShowPinnedBanner(false)}
+                    />
                 )}
 
-                {/* Options Menu */}
-                <TouchableOpacity
-                    className="w-10 h-10 items-center justify-center"
-                    onPress={() => setShowOptionsMenu(true)}
-                >
-                    <Ionicons name="ellipsis-vertical" size={20} color="#94A3B8" />
-                </TouchableOpacity>
-
-            </View>
-
-            {/* Pinned Message Banner */}
-            {showPinnedBanner && pinnedData?.data && pinnedData.data.length > 0 && (
-                <PinnedMessageBanner
-                    pinnedMessages={pinnedData.data}
-                    onPressPinned={handlePressPinned}
-                    onClose={() => setShowPinnedBanner(false)}
+                {/* Messages List */}
+                <MessageList
+                    messages={data?.data || []}
+                    currentUserId={user?._id || ''}
+                    isLoading={isLoading}
+                    error={error}
+                    onRefresh={refetch}
+                    isRefreshing={isRefetching}
+                    isAIChat={isAIChatAssistant}
+                    onReact={handleReact}
+                    onRemoveReaction={handleRemoveReaction}
+                    onPin={handlePin}
+                    onUnpin={handleUnpin}
+                    onStar={handleStar}
+                    onUnstar={handleUnstar}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onForward={handleForward}
+                    onSetAutoDelete={handleSetAutoDelete}
+                    onCancelAutoDelete={handleCancelAutoDelete}
                 />
-            )}
 
-            {/* Messages List */}
-            <MessageList
-                messages={data?.data || []}
-                currentUserId={user?._id || ''}
-                isLoading={isLoading}
-                error={error}
-                onRefresh={refetch}
-                isRefreshing={isRefetching}
-                isAIChat={isAIChatAssistant}
-                onReact={handleReact}
-                onRemoveReaction={handleRemoveReaction}
-                onPin={handlePin}
-                onUnpin={handleUnpin}
-                onStar={handleStar}
-                onUnstar={handleUnstar}
-                onDelete={handleDelete}
-                onEdit={handleEdit}
-                onForward={handleForward}
-                onSetAutoDelete={handleSetAutoDelete}
-                onCancelAutoDelete={handleCancelAutoDelete}
-            />
-
-            {/* Message Input */}
-            {isRecordingVoice ? (
-                <VoiceRecorder
-                    onSend={handleSendVoiceNote}
-                    onCancel={handleCancelVoiceNote}
-                />
-            ) : (
-                <MessageInput
-                    onSend={handleSendMessage}
-                    isSending={isSending || isAIResponding}
-                    onTyping={handleTyping}
-                    onAttachmentPress={() => setShowAttachmentMenu(true)}
-                />
-            )}
+                {/* Message Input */}
+                {isRecordingVoice ? (
+                    <VoiceRecorder
+                        onSend={handleSendVoiceNote}
+                        onCancel={handleCancelVoiceNote}
+                    />
+                ) : (
+                    <MessageInput
+                        onSend={handleSendMessage}
+                        isSending={isSending || isAIResponding}
+                        onTyping={handleTyping}
+                        onAttachmentPress={() => setShowAttachmentMenu(true)}
+                    />
+                )}
+            </KeyboardAvoidingView>
 
             {/* Attachment Menu */}
             <AttachmentMenu
