@@ -65,6 +65,7 @@ jobs:
         run: |
           if [ -n "${{ secrets.EXPO_TOKEN }}" ]; then
             echo "Publishing OTA Update to Expo..."
+            npx eas-cli channel:create production --non-interactive || true
             npx eas-cli update --branch production --auto --non-interactive
           else
             echo "EXPO_TOKEN secret not found. Skipping automated OTA update publish."
