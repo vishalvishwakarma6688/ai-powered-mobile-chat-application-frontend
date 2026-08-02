@@ -36,9 +36,11 @@ yarn-error.*
 .env.staging
 .env.production
 
-# EAS
+# EAS & Firebase Secrets
 .eas/
 android-service-account.json
+google-services.json
+firebase-service-account.json
 *.keystore
 *.jks
 
