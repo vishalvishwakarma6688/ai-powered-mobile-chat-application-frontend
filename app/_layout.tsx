@@ -117,26 +117,23 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
+    // Hide splash screen & reveal app UI instantly (<200ms)
     const init = async () => {
       try {
-        await checkAndApplyUpdate();
-      } finally {
-        try {
-          await SplashScreen.hideAsync();
-        } catch (e) {
-          console.warn('Splash screen hide error:', e);
-        }
-        setReady(true);
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.warn('Splash screen hide error:', e);
       }
+      setReady(true);
+
+      // Check for updates asynchronously in background (never block startup)
+      setTimeout(() => {
+        checkAndApplyUpdate();
+      }, 1000);
     };
     init();
 
-    // Check again 5 seconds after startup (once network is fully established)
-    const delayedCheck = setTimeout(() => {
-      checkAndApplyUpdate();
-    }, 5000);
-
-    // Check whenever app resumes to foreground
+    // Check again when app resumes to foreground
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         checkAndApplyUpdate();
@@ -144,7 +141,6 @@ export default function RootLayout() {
     });
 
     return () => {
-      clearTimeout(delayedCheck);
       subscription.remove();
     };
   }, []);
