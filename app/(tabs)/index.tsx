@@ -134,7 +134,12 @@ export default function ChatsScreen() {
             )}
           </TouchableOpacity>
           <View>
-            <Text className="text-white text-xl font-bold">Chats</Text>
+            <View className="flex-row items-center">
+              <Text className="text-white text-xl font-bold">Chats</Text>
+              <View className="ml-2 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                <Text className="text-emerald-400 text-[10px] font-bold">OTA LIVE ✨</Text>
+              </View>
+            </View>
             <Text className="text-slate-400 text-xs mt-0.5">
               Logged in as <Text className="text-[#6C5CE7] font-semibold">{user?.username || 'User'}</Text>
             </Text>
