@@ -67,13 +67,15 @@ export default function OTADebugModal({ visible, onClose }: OTADebugModalProps) 
             if (update.isAvailable) {
                 setStatusMessage(`🔄 New update found! ID: ${(update as any).manifest?.id || 'Ready'}. Downloading...`);
                 await Updates.fetchUpdateAsync();
-                setStatusMessage('✅ Download complete! Reloading app...');
+                setStatusMessage('✅ Download complete! Reloading app now...');
                 setTimeout(async () => {
                     await Updates.reloadAsync();
-                }, 1000);
+                }, 800);
             } else {
-                const details = JSON.stringify(update);
-                setStatusMessage(`ℹ️ App is up to date according to server.\nServer Response: ${details}`);
+                setStatusMessage(`✅ Reloading app now to apply downloaded update bundle...`);
+                setTimeout(async () => {
+                    await Updates.reloadAsync();
+                }, 800);
             }
         } catch (e: any) {
             console.error('Check update error:', e);

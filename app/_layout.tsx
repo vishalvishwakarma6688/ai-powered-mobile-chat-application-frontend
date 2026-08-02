@@ -99,20 +99,20 @@ function RootLayoutContent() {
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
-  // Helper to check & apply OTA updates safely
+  // Helper to check & apply OTA updates automatically
   const checkAndApplyUpdate = async () => {
     try {
       if (__DEV__ || !Updates.isEnabled) return;
-      console.log('🔍 Checking for OTA updates...');
+      console.log('🔍 Checking for OTA updates automatically...');
       const update = await Updates.checkForUpdateAsync();
       if (update.isAvailable) {
-        console.log('🔄 New OTA update found! Downloading...');
+        console.log('🔄 New OTA update found! Downloading automatically...');
         await Updates.fetchUpdateAsync();
-        console.log('✅ OTA update downloaded! Reloading app...');
+        console.log('✅ OTA update downloaded! Reloading app automatically...');
         await Updates.reloadAsync();
       }
     } catch (e: any) {
-      console.log('ℹ️ OTA update check status:', e?.message || e);
+      console.log('ℹ️ Automatic OTA update status:', e?.message || e);
     }
   };
 
