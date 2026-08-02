@@ -12,6 +12,7 @@ import { asyncStoragePersister } from '../lib/api/queryPersister';
 import { useAuthStore } from '../lib/store/authStore';
 import { SocketProvider } from '../lib/socket/socketContext';
 import { initDatabase } from '../lib/db/database';
+import { registerForPushNotificationsAsync, setupNotificationListeners } from '../lib/notifications/notificationService';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -28,6 +29,16 @@ function RootLayoutContent() {
     initDatabase();
     loadAuth();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      registerForPushNotificationsAsync();
+      const unsubscribe = setupNotificationListeners((chatId) => {
+        router.push(`/chat/${chatId}`);
+      });
+      return () => unsubscribe();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isLoading) return;
